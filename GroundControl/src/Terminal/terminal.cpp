@@ -11,27 +11,27 @@ Terminal::Terminal() {
 };
 
 void Terminal::printHelp(String cmdToken) {
-  if (cmdToken == "device") {
-    Serial.println("[ HELP ] DEVICE:");
-    Serial.println("  - device ls                               Lists all registered devices");
-    Serial.println("  - device rm -i <DEVICE_INDEX>             Removes a device by slot index");
-    Serial.println("  - device rm -m <MAC_ADDRESS>              Removes a device by MAC address");
-    Serial.println("  - device add <MAC_ADDRESS> <NAME>         Adds a device (max name: 26 chars)");
-    Serial.println("  - device call -i <DEVICE_INDEX> <PAYLOAD> Calls device at index with payload");
-    Serial.println("  - device call -a <PAYLOAD>                Calls all devices with payload");
-    Serial.println("  - device update -i <DEVICE_INDEX>         Sends an OTA Update message to a device");
+  if (cmdToken == NODE_CMD_TOKEN) {
+    Serial.println("[ HELP ] NODE:");
+    Serial.println("  - node ls                              Lists all registered nodes");
+    Serial.println("  - node rm -i <NODE_INDEX>              Removes a node by slot index");
+    Serial.println("  - node rm -m <MAC_ADDRESS>             Removes a node by MAC address");
+    Serial.println("  - node add <MAC_ADDRESS> <NAME>        Adds a node (max name: 26 chars)");
+    Serial.println("  - node send -i <NODE_INDEX> <PAYLOAD>  Calls node at index with payload");
+    Serial.println("  - node send -a <PAYLOAD>               Broadcasts to all nodes with payload");
+    Serial.println("  - node update -i <NODE_INDEX>          Sends an OTA Update message to a device");
     Serial.println();
 
   }
-  else if (cmdToken == "route") {
-    Serial.println("[ HELP ] ROUTE:");
+  else if (cmdToken == ROUTE_CMD_TOKEN) {
+    Serial.println("[ HELP ] ROUTE: *** NOT IMPLEMENTED *** ");
     Serial.println("  - route ls                                Lists all routing rules");
     Serial.println("  - route rm <ROUTE_INDEX>                  Removes a routing rule by index");
     Serial.println("  - route add <INBOUND_MAC> <OUTBOUND_MAC>  Adds a routing rule");
     Serial.println();
 
   }
-  else if (cmdToken == "reboot") {
+  else if (cmdToken == SYSTEM_CMD_TOKEN) {
     Serial.println("[ HELP ] REBOOT:");
     Serial.println("  - reboot                          Reboots the device");
     Serial.println();
@@ -39,17 +39,75 @@ void Terminal::printHelp(String cmdToken) {
   }
   else {
     Serial.println("[ HELP ] - Available commands:");
-    Serial.println("  - device                           Device management commands");
+    Serial.println("  - node                             Node management commands");
     Serial.println("  - route                            Route management commands");
-    Serial.println("  - reboot                           Reboot the device");
+    Serial.println("  - system                           System management commands");
     Serial.println();
     Serial.println("Type <COMMAND> for more details on usage");
   }
 }
 
+
+inline uint8_t getCmdType(String cmdToken, String actionToken) {
+  uint8_t cmdType = 99;
+
+  if (cmdToken == NODE_CMD_TOKEN) {
+    if (actionToken == NODE_CMD_LS_TOKEN) {
+      cmdType = CMD_NODE_LS;
+    }
+    else if (actionToken == NODE_CMD_RM_TOKEN) {
+      cmdType = CMD_NODE_RM;
+    }
+    else if (actionToken == NODE_CMD_ADD_TOKEN) {
+      cmdType = CMD_NODE_ADD;
+    }
+    else if (actionToken == NODE_CMD_SEND_TOKEN) {
+      cmdType = CMD_NODE_SEND;
+    }
+    else if (actionToken == NODE_CMD_UPDATE_TOKEN) {
+      cmdType = CMD_NODE_SYS_UPDATE;
+    }
+    else {
+      Serial.printf("[ ERROR ] Action [ %s ] not recognized. \n", String(actionToken));
+    }
+  }
+  else if (cmdToken == ROUTE_CMD_TOKEN) {
+    if (actionToken == "ls") {
+      cmdType = CMD_ROUTE_LS;
+    }
+    else if (actionToken == "rm") {
+      cmdType = CMD_ROUTE_RM;
+    }
+    else if (actionToken == "add") {
+      cmdType = CMD_ROUTE_ADD;
+    }
+    else {
+      Serial.printf("[ ERROR ] Action [%s] not recognized. \n", String(actionToken));
+    }
+  }
+  else if (cmdToken == SYSTEM_CMD_TOKEN) {
+    if (actionToken == SYSTEM_RESTART_TOKEN) {
+      cmdType = CMD_SYSTEM_RESTART;
+    }
+    else if (actionToken == SYSTEM_UPDATE_TOKEN) {
+      cmdType = CMD_SYSTEM_UPDATE;
+    }
+    // else if (cmdToken == "config") {
+    //   Serial.println("[ INFO ] config requested");
+    // }
+  }
+
+  else {
+    Serial.println("[ ERROR ] Command not recognized");
+  }
+
+  return cmdType;
+}
+
+
 void Terminal::parseCommand() {
   char* tokens[BUFFER_SIZE];
-  Serial.printf("[ DEBUG ] - Received %s \n", String(buffer));
+  // Serial.printf("[ DEBUG ] - Received %s \n", String(buffer));
 
   uint8_t tokensCount = 0;
   char* token = strtok(buffer, " ");
@@ -70,52 +128,11 @@ void Terminal::parseCommand() {
   String actionToken = (tokensCount > 1) ? String(tokens[1]) : String("");
   actionToken.toLowerCase();
   cmdToken.toLowerCase();
-  uint8_t cmdType = 99;
 
-  if (cmdToken == "device") {
-    if (actionToken == "ls") {
-      cmdType = CMD_DEVICE_LS;
-    }
-    else if (actionToken == "rm") {
-      cmdType = CMD_DEVICE_RM;
-    }
-    else if (actionToken == "add") {
-      cmdType = CMD_DEVICE_ADD;
-    }
-    else if (actionToken == "call") {
-      cmdType = CMD_DEVICE_CALL;
-    }
-    else if (actionToken == "update") {
-      cmdType = CMD_DEVICE_UPDATE;
-    }
-    else {
-      Serial.printf("[ ERROR ] Action [ %s ] not recognized. \n", String(actionToken));
-      printHelp(cmdToken);
-      return;
-    }
-  }
-  else if (cmdToken == "route") {
-    if (actionToken == "ls") {
-      cmdType = CMD_ROUTE_LS;
-    }
-    else if (actionToken == "rm") {
-      cmdType = CMD_ROUTE_RM;
-    }
-    else if (actionToken == "add") {
-      cmdType = CMD_ROUTE_ADD;
-    }
-    else {
-      Serial.printf("[ ERROR ] Action [%s] not recognized. \n", String(actionToken));
-      printHelp(cmdToken);
-      return;
-    }
-  }
-  else if (cmdToken == "reboot") {
-    Serial.println("[ INFO ] reboot requested");
-  }
-  else {
-    Serial.println("[ ERROR ] Command not recognized");
-    printHelp("");
+  uint8_t cmdType = getCmdType(cmdToken, actionToken);
+
+  if (cmdType == 99) {
+    printHelp(cmdToken);
     return;
   }
 
@@ -170,24 +187,25 @@ void Terminal::poll() {
 
 /** HANDLERS FOR TERMINAL COMMANDS */
 
-void deviceListHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
+void nodesListHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
   espNow->listDevices();
 }
 
-void deviceRemoveHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
+void nodesRemoveHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
   if (argc != 4) {
     Serial.println("[ ERROR ] - Unercognized command format too few arguments, use either");
-    Serial.println("        device rm -i INDEX");
+    Serial.println("        node rm -i INDEX");
     Serial.println("        or ");
-    Serial.println("        device rm -m MAC_ADDRESS");
+    Serial.println("        node rm -m MAC_ADDRESS");
+    return;
   }
 
   String mode = String(args[2]);
   mode.toLowerCase();
 
-  // device rm -m MAC_ADDR
+  // node rm -m MAC_ADDR
   if (mode == "-m") {
     // parse transform mac into 6 bytes
     // from text FF:DC:AA:00:1B:B0
@@ -206,24 +224,22 @@ void deviceRemoveHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
 
   if (mode == "-i") {
     uint8_t index = atoi(args[3]);
-    Serial.printf("[ INFO ] - Removing device at slot %d \n", index);
+    Serial.printf("[ INFO ] - Removing node at slot %d \n", index);
     espNow->removeDevice(index);
     return;
   }
 }
 
-void deviceAddHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
+void nodesAddHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
 
   ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
-  // device add MAC_ADDR NAME
+  // node add MAC_ADDR NAME
 
   if (argc < 4) {
     Serial.println("[ ERROR ] - invalid input arguments");
-    Serial.println("   Usage: device add MAC_ADDR NAME");
+    Serial.println("   Usage: node add MAC_ADDR NAME");
+    return;
   }
-
-  // TODO, validate mac address?
-  Device* d = new Device();
 
   uint8_t macAddr[6];
   if (sscanf(args[2], "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx",
@@ -233,21 +249,25 @@ void deviceAddHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
     return;
   }
 
+  Device* d = new Device();
+
   memcpy(d->macAddress, macAddr, 6);
   memcpy(d->name, args[3], 26);
 
   if (espNow->addDevice(d)) {
-    Serial.println("OK");
+    Serial.println("[ INFO ] - OK");
   }
 }
 
-void deviceCallHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
+void nodeSendHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
  //command example
- // device call -i 3 FX 3 10
- // device call -i 3 BR 35
- // device call -i 3 STOP
- // device call -i 3 OFF
+ // node send -i 3 FX 3 10
+ // node send -i 3 BR 35
+ // node send -i 3 STOP
+ // node send -i 3 OFF
+ // node send -a R:255:G:10:B100
+ // node send -a FX:3:10
 
   if (argc < 4) {
     Serial.printf("[ ERROR ] - Invalid argument count, expected more than 4 received %d \n", argc);
@@ -271,6 +291,12 @@ void deviceCallHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   if (mode == "-i") {
     espNow->sendToDevice((uint8_t)atoi(args[3]), (const uint8_t*)payload.c_str(), (const uint8_t)payload.length());
   }
+  else if (mode == "-a") {
+    espNow->broadcast((const uint8_t*)payload.c_str(), (const uint8_t)payload.length());
+  }
+  else {
+    Serial.println("[ ERROR ] - Invalid mode, expected -i or -a");
+  }
 }
 
 void systemRestartHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
@@ -280,15 +306,27 @@ void systemRestartHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
 
 
 void Terminal::bindHandlers() {
-  attachHandler(CMD_DEVICE_LS, deviceListHandler);
-  attachHandler(CMD_DEVICE_RM, deviceRemoveHandler);
-  attachHandler(CMD_DEVICE_ADD, deviceAddHandler);
-  attachHandler(CMD_DEVICE_CALL, deviceCallHandler);
+  /** System command handlers */
+  attachHandler(CMD_SYSTEM_RESTART, systemRestartHandler);
+  // attachHandler(CMD_SYSTEM_UPDATE, systemUpdateHandler);
+  // attachHandler(CMD_SYSTEM_CONFIG_SET, systemConfigSetHandler);
+  // attachHandler(CMD_SYSTEM_CONFIG_GET, systemConfigGetHandler);
+  // attachHandler(CMD_SYSTEM_CFG_DUMP, systemConfigDumpHandler);
+  // attachHandler(CMD_SYSTEM_CFG_CLEAR, systemConfigClearHandler);
+
+
+  /** Node command handlers */
+  attachHandler(CMD_NODE_LS, nodesListHandler);
+  attachHandler(CMD_NODE_RM, nodesRemoveHandler);
+  attachHandler(CMD_NODE_ADD, nodesAddHandler);
+  attachHandler(CMD_NODE_SEND, nodeSendHandler);
+
 
 
   //Routes are not implemented for now
 
 
 
-  attachHandler(CMD_RESTART, systemRestartHandler);
+
+
 }

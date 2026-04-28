@@ -11,9 +11,9 @@ void debugPrint(uint8_t* data, size_t len) {
 };
 
 /** Iterates through all devices in the list and prints out the macAddress value */
-void listAllDevices(Device* d[MAX_PEERS]) {
+void listAllDevices(Device* d[MAX_NODES]) {
   Serial.println("[ INFO ] - Listing all devices:");
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (d[i] != nullptr) {
       Serial.printf("  Device %d: [%02x:%02x:%02x:%02x:%02x:%02x]\n",
         i,
@@ -210,7 +210,7 @@ bool ESPNowWrapper::addDevice(const Device* device, bool asBroker) {
     }
 
     // Add the device to the list, device position 0 is reserved for broker
-    for (int i = 1; i < MAX_PEERS; i++) {
+    for (int i = 1; i < MAX_NODES; i++) {
       if (instance->devices[i] == nullptr) {
         idx = i;
         break;
@@ -258,7 +258,7 @@ bool ESPNowWrapper::addDevice(const Device* device, bool asBroker) {
 }
 
 bool ESPNowWrapper::removeDevice(const uint8_t macAddres[6]) {
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr && memcmp(instance->devices[i]->macAddress, macAddres, 6) == 0) {
       return instance->removeDevice(i);
     }
@@ -269,7 +269,7 @@ bool ESPNowWrapper::removeDevice(const uint8_t macAddres[6]) {
 
 bool ESPNowWrapper::removeDevice(uint8_t idx) {
 
-  if (idx >= MAX_PEERS) {
+  if (idx >= MAX_NODES) {
     Serial.printf("[ ERROR ] - Index[%d] out of bounds trying to remove device \n", idx);
   }
 
@@ -304,7 +304,7 @@ bool ESPNowWrapper::removeDevice(uint8_t idx) {
 void ESPNowWrapper::storeDevices() {
   instance->prefs.begin("devices", false);
 
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr) {
       instance->prefs.putBytes(String("slot_" + String(i)).c_str(), (uint8_t*)devices[i], sizeof(Device));
     }
@@ -317,7 +317,7 @@ void ESPNowWrapper::storeDevices() {
 void ESPNowWrapper::loadDevices() {
   instance->prefs.begin("devices", false);
 
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     String id = String("slot_" + String(i));
     Serial.printf("[ DEBUG ] - Loading %s... ", id.c_str());
 
@@ -348,7 +348,7 @@ void ESPNowWrapper::loadDevices() {
 }
 
 void ESPNowWrapper::listDevices() {
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (instance->devices[i] == nullptr) {
       continue;
     }
@@ -361,7 +361,7 @@ void ESPNowWrapper::listDevices() {
 }
 
 Device* ESPNowWrapper::getDevice(const uint8_t macAddr[6]) {
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr && memcmp(instance->devices[i]->macAddress, macAddr, 6) == 0) {
       return instance->devices[i];
     }
@@ -374,7 +374,7 @@ Device** ESPNowWrapper::getDevices() {
 }
 
 bool ESPNowWrapper::sendToDevice(uint8_t index, const uint8_t* message, const uint8_t len) {
-  if (index >= MAX_PEERS) {
+  if (index >= MAX_NODES) {
     Serial.printf("[ ERROR ] - Slot [%d] is out of bounds \n", index);
     return false;
   }
@@ -398,7 +398,7 @@ bool ESPNowWrapper::sendToDevice(const Device& device, const uint8_t* message, c
 
 void ESPNowWrapper::sendToAll(const uint8_t* message, const uint8_t len) {
   Serial.println("[ INFO ] - Sending message to all devices");
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr) {
       sendToDevice(*devices[i], message, len);
     }

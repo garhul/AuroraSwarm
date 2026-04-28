@@ -10,7 +10,7 @@
 
 #include <Preferences.h>
 
-#define MAX_PEERS 16 // first peer is broadcast addr
+#define MAX_NODES 16 // first peer is broadcast addr
 #define ESPNOW_WIFI_CHANNEL 6
 #define MAX_PAYLOAD_SIZE 128
 #define PAIR_REQ_TTL 2000 // TTL of a pair request in ms
@@ -21,7 +21,7 @@ typedef void (*MessageHandler)(uint8_t* macAddr, uint8_t* message, uint8_t len);
 class ESPNowWrapper {
   private:
   static ESPNowWrapper* instance;
-  Device* devices[MAX_PEERS] = {};
+  Device* devices[MAX_NODES] = {};
   MessageHandler handlers[MSG_TYPE_COUNT];
   bool autoPair;
   bool isBroker;

@@ -1,4 +1,4 @@
-#include "wrapper.h"
+#include "EspNowWrapper.h"
 ESPNowWrapper* ESPNowWrapper::instance = nullptr;
 
 void debugPrint(uint8_t* data, size_t len) {
@@ -11,9 +11,9 @@ void debugPrint(uint8_t* data, size_t len) {
 };
 
 /** Iterates through all devices in the list and prints out the macAddress value */
-void listAllDevices(Device* d[MAX_PEERS]) {
+void listAllDevices(Device* d[MAX_NODES]) {
   Serial.println("[ INFO ] - Listing all devices:");
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (d[i] != nullptr) {
       Serial.printf("  Device %d: [%02x:%02x:%02x:%02x:%02x:%02x]\n",
         i,
@@ -21,6 +21,14 @@ void listAllDevices(Device* d[MAX_PEERS]) {
         d[i]->macAddress[3], d[i]->macAddress[4], d[i]->macAddress[5]);
     }
   }
+}
+
+ESPNowWrapper* ESPNowWrapper::getInstance() {
+  if (instance == nullptr) {
+    new ESPNowWrapper(AS_BROKER);
+  }
+
+  return instance;
 }
 
 ESPNowWrapper::ESPNowWrapper(bool isBroker) {
@@ -82,13 +90,26 @@ void ESPNowWrapper::pairOkHandler(uint8_t* macAddr, uint8_t* msg, uint8_t len) {
 }
 
 void ESPNowWrapper::addPeer(const uint8_t* macAddr) {
+#ifdef ESP32
 
-  if (esp_now_add_peer((uint8_t*)macAddr, ESP_NOW_ROLE_COMBO, 1, NULL, 0) != ESP_OK) {
+  esp_now_peer_info_t peerInfo;
+  memset(&peerInfo, 0, sizeof(peerInfo));
+  memcpy(peerInfo.peer_addr, macAddr, 6);
+  peerInfo.channel = 0;
+  peerInfo.encrypt = false;
+
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
     Serial.println("[ ERROR ] - Failed to add peer");
   }
+
+#elif defined(ESP8266)
+  esp_now_add_peer((uint8_t*)macAddr, ESP_NOW_ROLE_COMBO, 1, NULL, 0);
+#endif
+
 }
 
 void ESPNowWrapper::begin() {
+  Serial.printf("broker - > %d", instance->isBroker);
   if (instance == nullptr) {
     Serial.println("[ ERROR ] no instance!");
     return;
@@ -116,11 +137,32 @@ void ESPNowWrapper::begin() {
   addPeer(broadcastAddress);
 
   Serial.println("[ INFO ] - Broadcast peer added");
+
+#ifdef ESP32
+
+  uint8_t baseMac[6];
+  esp_err_t ret = esp_wifi_get_mac(WIFI_IF_STA, baseMac);
+
+  if (ret == ESP_OK) {
+    Serial.printf("[ INFO ] - MAC Address: [%02x:%02x:%02x:%02x:%02x:%02x]\n",
+                  baseMac[0], baseMac[1], baseMac[2],
+                  baseMac[3], baseMac[4], baseMac[5]);
+  } else {
+    Serial.println("[ ERROR ] - Failed to read MAC address");
+  }
+
+#elif defined(ESP8266)
   Serial.printf("[ INFO ] - local mac: %s\n", String(WiFi.macAddress()).c_str());
+#endif
+
   Serial.printf("[ INFO ] - Wi-Fi Channel: %d\n", WiFi.channel());
 
+#ifdef ESP32
+  esp_now_register_recv_cb((esp_now_recv_cb_t)&ESPNowWrapper::onMessage);
+#elif defined(ESP8266)
   esp_now_set_self_role(ESP_NOW_ROLE_COMBO);
   esp_now_register_recv_cb(&ESPNowWrapper::onMessage);
+#endif
 
   registerHandler(MSG_PAIR_REQUEST, &ESPNowWrapper::pairRequestHandler);
 
@@ -129,6 +171,7 @@ void ESPNowWrapper::begin() {
   }
 
   loadDevices();
+
 }
 
 void ESPNowWrapper::onMessage(uint8_t* macAddr, uint8_t* msg, uint8_t len) {
@@ -186,7 +229,7 @@ bool ESPNowWrapper::addDevice(const Device* device, bool asBroker) {
     }
 
     // Add the device to the list, device position 0 is reserved for broker
-    for (int i = 1; i < MAX_PEERS; i++) {
+    for (int i = 1; i < MAX_NODES; i++) {
       if (instance->devices[i] == nullptr) {
         idx = i;
         break;
@@ -234,7 +277,7 @@ bool ESPNowWrapper::addDevice(const Device* device, bool asBroker) {
 }
 
 bool ESPNowWrapper::removeDevice(const uint8_t macAddres[6]) {
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr && memcmp(instance->devices[i]->macAddress, macAddres, 6) == 0) {
       return instance->removeDevice(i);
     }
@@ -245,7 +288,7 @@ bool ESPNowWrapper::removeDevice(const uint8_t macAddres[6]) {
 
 bool ESPNowWrapper::removeDevice(uint8_t idx) {
 
-  if (idx >= MAX_PEERS) {
+  if (idx >= MAX_NODES) {
     Serial.printf("[ ERROR ] - Index[%d] out of bounds trying to remove device \n", idx);
   }
 
@@ -280,7 +323,7 @@ bool ESPNowWrapper::removeDevice(uint8_t idx) {
 void ESPNowWrapper::storeDevices() {
   instance->prefs.begin("devices", false);
 
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr) {
       instance->prefs.putBytes(String("slot_" + String(i)).c_str(), (uint8_t*)devices[i], sizeof(Device));
     }
@@ -293,7 +336,7 @@ void ESPNowWrapper::storeDevices() {
 void ESPNowWrapper::loadDevices() {
   instance->prefs.begin("devices", false);
 
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     String id = String("slot_" + String(i));
     Serial.printf("[ DEBUG ] - Loading %s... ", id.c_str());
 
@@ -323,21 +366,8 @@ void ESPNowWrapper::loadDevices() {
   instance->prefs.end();
 }
 
-void ESPNowWrapper::listDevices() {
-  for (int i = 0; i < MAX_PEERS; i++) {
-    if (instance->devices[i] == nullptr) {
-      continue;
-    }
-    Serial.printf("[ DEVICE ] - SLOT %d - MAC [%02x:%02x:%02x:%02x:%02x:%02x] ",
-            i,
-           devices[i]->macAddress[0], devices[i]->macAddress[1], devices[i]->macAddress[2],
-           devices[i]->macAddress[3], devices[i]->macAddress[4], devices[i]->macAddress[5]);
-    Serial.printf("  NAME [%s]\n", devices[i]->name);
-  }
-}
-
 Device* ESPNowWrapper::getDevice(const uint8_t macAddr[6]) {
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr && memcmp(instance->devices[i]->macAddress, macAddr, 6) == 0) {
       return instance->devices[i];
     }
@@ -349,8 +379,22 @@ Device** ESPNowWrapper::getDevices() {
   return devices;
 }
 
+bool ESPNowWrapper::sendToDevice(const Device& device, const uint8_t* message, const uint8_t len) {
+  Serial.printf("[ INFO ] - Sending message to device: %s\n", device.name);
+
+  int result = esp_now_send((uint8_t*)device.macAddress, (uint8_t*)message, len);
+
+  if (result == ESP_OK) {
+    Serial.println("[ INFO ] - Message sent successfully");
+    return true;
+  } else {
+    Serial.printf("[ ERROR ] - Error sending message %d\n", result);
+    return false;
+  }
+}
+
 bool ESPNowWrapper::sendToDevice(uint8_t index, const uint8_t* message, const uint8_t len) {
-  if (index >= MAX_PEERS) {
+  if (index >= MAX_NODES) {
     Serial.printf("[ ERROR ] - Slot [%d] is out of bounds \n", index);
     return false;
   }
@@ -358,23 +402,9 @@ bool ESPNowWrapper::sendToDevice(uint8_t index, const uint8_t* message, const ui
   return sendToDevice(*devices[index], message, len);
 }
 
-bool ESPNowWrapper::sendToDevice(const Device& device, const uint8_t* message, const uint8_t len) {
-  Serial.printf("[ INFO ] - Sending message to device: %s\n", device.name);
-
-  int result = esp_now_send((uint8_t*)device.macAddress, (uint8_t*)message, len);
-
-  if (result == ESP_OK) {
-    return true;
-    Serial.println("[ INFO ] - Message sent successfully");
-  } else {
-    Serial.printf("[ ERROR ] - Error sending message %d\n", result);
-    return false;
-  }
-}
-
 void ESPNowWrapper::sendToAll(const uint8_t* message, const uint8_t len) {
   Serial.println("[ INFO ] - Sending message to all devices");
-  for (int i = 0; i < MAX_PEERS; i++) {
+  for (int i = 0; i < MAX_NODES; i++) {
     if (devices[i] != nullptr) {
       sendToDevice(*devices[i], message, len);
     }

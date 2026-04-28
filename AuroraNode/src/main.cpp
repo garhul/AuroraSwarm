@@ -1,19 +1,18 @@
-// #include "main.h"
+
 #include <Arduino.h>
-#include "EspNow/wrapper.h"
-#include "Strip/strip.hpp"
-
-
-/* TODO:: make these params part of the eeprom and configurable via ESPNOW*/
-#define LED_COUNT 100
-// #define 
-
+#include "EspNowWrapper.h"
+#include "Strip/strip.h"
+// #include "Settings/settings.h"
+// #include "Inputs/Inputs.h"
 
 #define BTN_A D6
 #define BTN_B D7
 
-ESPNowWrapper espNow(false);
-Strip strip;
+// Todo - add settings manager and persist settings to eeprom
+#define NUM_LEDS 28
+
+ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
+Strip* strip = Strip::getInstance(NUM_LEDS);
 
 // void hndlr(uint8_t* macAddr, uint8_t* message, uint8_t len) {
 //   Serial.println("Sample command received");
@@ -32,23 +31,29 @@ void setup() {
   pinMode(BTN_B, INPUT_PULLUP);
   pinMode(LED_BUILTIN, OUTPUT);
 
-  espNow.begin();
+  espNow->begin();
   digitalWrite(LED_BUILTIN, LOW);
 
-  strip.begin(LED_COUNT);
-
   // bindHandlers();
+
+  strip->test();
+  strip->off();
+  strip->setFx(Animator::FX::RAINBOW);
+  strip->play();
 
 }
 
 void loop() {
+
+  strip->update();
+
   static unsigned long backOff_A = millis();
   // static unsigned long backOff_B = millis();
 
-  strip.update();
+  // Strip.update();
   if (digitalRead(BTN_A) == LOW && backOff_A < millis()) {
     if (digitalRead(LED_BUILTIN) == LOW) {
-      espNow.requestToPair();
+      espNow->requestToPair();
       digitalWrite(LED_BUILTIN, HIGH);
     } else {
       digitalWrite(LED_BUILTIN, LOW);
@@ -62,4 +67,4 @@ void loop() {
   //   espNow.sendToAll((const uint8_t*)&msg, 4);
   //   backOff_B = millis() + 1000;
   // }
-}
+};

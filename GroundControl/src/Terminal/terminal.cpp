@@ -22,22 +22,19 @@ void Terminal::printHelp(String cmdToken) {
     Serial.println("  - node update -i <NODE_INDEX>          Sends an OTA Update message to a device");
     Serial.println();
 
-  }
-  else if (cmdToken == ROUTE_CMD_TOKEN) {
+  } else if (cmdToken == ROUTE_CMD_TOKEN) {
     Serial.println("[ HELP ] ROUTE: *** NOT IMPLEMENTED *** ");
     Serial.println("  - route ls                                Lists all routing rules");
     Serial.println("  - route rm <ROUTE_INDEX>                  Removes a routing rule by index");
     Serial.println("  - route add <INBOUND_MAC> <OUTBOUND_MAC>  Adds a routing rule");
     Serial.println();
 
-  }
-  else if (cmdToken == SYSTEM_CMD_TOKEN) {
+  } else if (cmdToken == SYSTEM_CMD_TOKEN) {
     Serial.println("[ HELP ] REBOOT:");
     Serial.println("  - reboot                          Reboots the device");
     Serial.println();
 
-  }
-  else {
+  } else {
     Serial.println("[ HELP ] - Available commands:");
     Serial.println("  - node                             Node management commands");
     Serial.println("  - route                            Route management commands");
@@ -54,42 +51,31 @@ inline uint8_t getCmdType(String cmdToken, String actionToken) {
   if (cmdToken == NODE_CMD_TOKEN) {
     if (actionToken == NODE_CMD_LS_TOKEN) {
       cmdType = CMD_NODE_LS;
-    }
-    else if (actionToken == NODE_CMD_RM_TOKEN) {
+    } else if (actionToken == NODE_CMD_RM_TOKEN) {
       cmdType = CMD_NODE_RM;
-    }
-    else if (actionToken == NODE_CMD_ADD_TOKEN) {
+    } else if (actionToken == NODE_CMD_ADD_TOKEN) {
       cmdType = CMD_NODE_ADD;
-    }
-    else if (actionToken == NODE_CMD_SEND_TOKEN) {
+    } else if (actionToken == NODE_CMD_SEND_TOKEN) {
       cmdType = CMD_NODE_SEND;
-    }
-    else if (actionToken == NODE_CMD_UPDATE_TOKEN) {
+    } else if (actionToken == NODE_CMD_UPDATE_TOKEN) {
       cmdType = CMD_NODE_SYS_UPDATE;
-    }
-    else {
+    } else {
       Serial.printf("[ ERROR ] Action [ %s ] not recognized. \n", String(actionToken));
     }
-  }
-  else if (cmdToken == ROUTE_CMD_TOKEN) {
+  } else if (cmdToken == ROUTE_CMD_TOKEN) {
     if (actionToken == "ls") {
       cmdType = CMD_ROUTE_LS;
-    }
-    else if (actionToken == "rm") {
+    } else if (actionToken == "rm") {
       cmdType = CMD_ROUTE_RM;
-    }
-    else if (actionToken == "add") {
+    } else if (actionToken == "add") {
       cmdType = CMD_ROUTE_ADD;
-    }
-    else {
+    } else {
       Serial.printf("[ ERROR ] Action [%s] not recognized. \n", String(actionToken));
     }
-  }
-  else if (cmdToken == SYSTEM_CMD_TOKEN) {
+  } else if (cmdToken == SYSTEM_CMD_TOKEN) {
     if (actionToken == SYSTEM_RESTART_TOKEN) {
       cmdType = CMD_SYSTEM_RESTART;
-    }
-    else if (actionToken == SYSTEM_UPDATE_TOKEN) {
+    } else if (actionToken == SYSTEM_UPDATE_TOKEN) {
       cmdType = CMD_SYSTEM_UPDATE;
     }
     // else if (cmdToken == "config") {
@@ -114,7 +100,7 @@ void Terminal::parseCommand() {
 
   while (token != NULL) {
     tokens[tokensCount] = token;
-    Serial.printf("[ DEBUG ] - Token [%d]:%s \n", tokensCount, String(token));
+    DEBUG(" Token [%d]:%s \n", tokensCount, String(token));
     token = strtok(NULL, " ");
     tokensCount++;
   }
@@ -145,8 +131,7 @@ void Terminal::handleCommand(uint8_t cmdType, uint8_t argc, char* argv[BUFFER_SI
 
   if (this->handlers[cmdType] != nullptr) {
     this->handlers[cmdType](argc, argv);
-  }
-  else {
+  } else {
     Serial.printf("[ ERROR ] - No handler registered for cmdType %d \n", cmdType);
   }
 
@@ -261,16 +246,9 @@ void nodesAddHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
 
 void nodeSendHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
- //command example
- // node send -i 3 FX 3 10
- // node send -i 3 BR 35
- // node send -i 3 STOP
- // node send -i 3 OFF
- // node send -a R:255:G:10:B100
- // node send -a FX:3:10
 
-  if (argc < 4) {
-    Serial.printf("[ ERROR ] - Invalid argument count, expected more than 4 received %d \n", argc);
+  if (argc != 4 && argc != 5) {
+    Serial.printf("[ ERROR ] - Invalid argument count, expected 5 or 4received %d \n", argc);
     return;
   }
 
@@ -279,22 +257,20 @@ void nodeSendHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   mode.toLowerCase();
 
   String payload;
-
   for (uint8_t i = 4; i < argc; i++) {
     payload += String(args[i]) + " ";
   }
-
   payload.trim();
-  Serial.print("[ DEBUG ] - Payload: ");
-  Serial.println(payload);
+
+  DEBUG("MODE :%s , PAYLOAD,:%s", mode, payload);
 
   if (mode == "-i") {
+    DEBUG("Sending Payload: %s, to device index %d \n", String(payload).c_str(), atoi(args[3]));
+    DEBUG("Index -> %d\n", (uint8_t)atoi(args[3]));
     espNow->sendToDevice((uint8_t)atoi(args[3]), (const uint8_t*)payload.c_str(), (const uint8_t)payload.length());
-  }
-  else if (mode == "-a") {
+  } else if (mode == "-a") {
     espNow->broadcast((const uint8_t*)payload.c_str(), (const uint8_t)payload.length());
-  }
-  else {
+  } else {
     Serial.println("[ ERROR ] - Invalid mode, expected -i or -a");
   }
 }

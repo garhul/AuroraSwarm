@@ -1,70 +1,84 @@
 
 #include <Arduino.h>
-#include "EspNowWrapper.h"
+#include "Logger.h"
+#include "defaults.h"
 #include "Strip/strip.h"
+#include "EspNowWrapper.h"
 // #include "Settings/settings.h"
 // #include "Inputs/Inputs.h"
 
-#define BTN_A D6
-#define BTN_B D7
+ESPNowWrapper* espNow = nullptr;
+Strip* strip = nullptr;
 
-// Todo - add settings manager and persist settings to eeprom
-#define NUM_LEDS 28
+void auroraHndlr(uint8_t* macAddr, uint8_t* message, uint8_t len) {
 
-ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
-Strip* strip = Strip::getInstance(NUM_LEDS);
+  switch ((AURORA_COMMANDS)message[1]) {
+    case AURORA_COMMANDS::CMD_SET_PX:
+      strip->pause();
+      strip->setPixelColor(message[2], message[3], message[4], message[5]);
+      break;
 
-// void hndlr(uint8_t* macAddr, uint8_t* message, uint8_t len) {
-//   Serial.println("Sample command received");
-//   digitalWrite(LED_BUILTIN, !digitalRead(LED_BUILTIN));
-// }
+    case AURORA_COMMANDS::CMD_SET_HSV:
+      strip->pause();
+      strip->clearToHSV(message[2], message[3], message[4]);
+      break;
 
-void bindHandlers() {
+    case AURORA_COMMANDS::CMD_SET_BR:
+      strip->setMaxBrightness(message[2]);
+      break;
 
+    case AURORA_COMMANDS::CMD_FX_SPEED:
+      strip->setAnimationSpeed(message[2]);
+      break;
+
+    case AURORA_COMMANDS::CMD_PLAY:
+      strip->play();
+      break;
+
+    case AURORA_COMMANDS::CMD_OFF:
+      strip->off();
+      break;
+
+    default:
+      WARN("unknown command [%d]", message[1]);
+
+  }
 }
 
+
 void setup() {
-  Serial.begin(115200);
   delay(2000);
 
-  pinMode(BTN_A, INPUT_PULLUP);
-  pinMode(BTN_B, INPUT_PULLUP);
-  pinMode(LED_BUILTIN, OUTPUT);
+#ifdef ESP8266
+  Serial.begin(115200);
+#endif
 
+  INFO("Starting Aurora Node \n");
+  strip = Strip::getInstance(NUM_LEDS);
+  pinMode(PAIR_BTN, INPUT_PULLUP);
+  espNow = ESPNowWrapper::getInstance();
   espNow->begin();
-  digitalWrite(LED_BUILTIN, LOW);
-
-  // bindHandlers();
+  espNow->registerHandler(MSG_TYPE::MSG_AURORA_CMD, auroraHndlr);
 
   strip->test();
   strip->off();
   strip->setFx(Animator::FX::RAINBOW);
-  strip->play();
-
+  strip->pause();
 }
 
 void loop() {
-
+  static unsigned long backOff_A = millis();
   strip->update();
 
-  static unsigned long backOff_A = millis();
-  // static unsigned long backOff_B = millis();
-
-  // Strip.update();
-  if (digitalRead(BTN_A) == LOW && backOff_A < millis()) {
-    if (digitalRead(LED_BUILTIN) == LOW) {
-      espNow->requestToPair();
-      digitalWrite(LED_BUILTIN, HIGH);
+  if (digitalRead(PAIR_BTN) == LOW && backOff_A < millis()) {
+    INFO("Requesting to pair \n");
+    if (strip->getState() == Strip::STATE::OFF) {
+      strip->play();
     } else {
-      digitalWrite(LED_BUILTIN, LOW);
+      strip->off();
     }
-    backOff_A = millis() + 1000;
-  }
 
-  // if (digitalRead(BTN_B) == LOW && backOff_B < millis()) {
-  //   Serial.println("[ INFO ] - Sending custom command");
-  //   const uint8_t msg[4] = { MSG_SAMPLE_CMD, 0, 0, 0 };
-  //   espNow.sendToAll((const uint8_t*)&msg, 4);
-  //   backOff_B = millis() + 1000;
-  // }
+    espNow->requestToPair();
+    backOff_A = millis() + 2000;
+  }
 };

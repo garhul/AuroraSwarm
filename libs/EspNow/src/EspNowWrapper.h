@@ -1,8 +1,12 @@
 #pragma once
+
 #include "types.h"
 #include <Arduino.h>
+#include "Logger.h"
 
 #ifdef ESP32
+
+
 
 #include <WiFi.h>
 #include <esp_wifi.h>
@@ -10,9 +14,7 @@
 #include <esp_now.h>
 
 #elif defined(ESP8266)
-
 #define ESP_OK 0
-
 #include <ESP8266WiFi.h>
 #include <espnow.h>
 
@@ -20,6 +22,7 @@
 
 
 #include <Preferences.h>
+
 
 #define MAX_NODES 16 // first peer is broadcast addr
 #define ESPNOW_WIFI_CHANNEL 6
@@ -33,7 +36,7 @@ class ESPNowWrapper {
   private:
   static ESPNowWrapper* instance;
   Device* devices[MAX_NODES] = {};
-  MessageHandler handlers[MSG_TYPE_COUNT];
+  MessageHandler handlers[(uint8_t)MSG_TYPE::MSG_TYPE_COUNT];
   bool autoPair;
   bool isBroker;
   Preferences prefs;
@@ -53,7 +56,9 @@ class ESPNowWrapper {
   ESPNowWrapper(const ESPNowWrapper& obj) = delete;
 
   // Static method to get the Singleton instance
+  static ESPNowWrapper* getInstance(bool as_broker);
   static ESPNowWrapper* getInstance();
+
 
   void begin();
   void broadcast(const uint8_t* msg, uint8_t len);
@@ -76,7 +81,7 @@ class ESPNowWrapper {
 
   bool updateDevice(uint8_t index, const Device* device);
   // bool callDevice(uint8_t macAddr[6], uint8_t* payload, uint8_t len);
-  bool sendToDevice(const Device& device, const uint8_t* msg, uint8_t len);
+  bool sendToDevice(const Device* device, const uint8_t* msg, uint8_t len);
   bool sendToDevice(uint8_t index, const uint8_t* msg, uint8_t len);
 
   Device* getDevice(const uint8_t macAddr[6]);

@@ -1,12 +1,9 @@
 #include "animator.h"
 
-
-
 void Animator::fx_rainbow() {
   this->frameIndex++;
   FastLED.showColor(CHSV(frameIndex % 255, 255, 255));
 }
-
 
 void Animator::animate(uint32_t frameIndex, Animator::FX fx) {
   static Animator::FX prev_fx = Animator::FX::NONE;

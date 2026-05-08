@@ -6,4 +6,6 @@
 #include <Arduino.h>
 #include "EspNow/wrapper.h"
 #include "Terminal/terminal.h"
+#include "EspNowWrapper.h"
+#include "Logger.h"
 

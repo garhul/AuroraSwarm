@@ -7,7 +7,7 @@ Strip::Strip(uint16_t numLeds) {
   this->state = STATE::OFF;
 
   if (numLeds > LED_BUFFER) {
-    Serial.printf("Warning: numLeds (%d) is greater than LED_BUFFER (%d), capping to LED_BUFFER \n", numLeds, LED_BUFFER);
+    printf("Warning: numLeds (%d) is greater than LED_BUFFER (%d), capping to LED_BUFFER \n", numLeds, LED_BUFFER);
     numLeds = LED_BUFFER;
   }
   this->length = numLeds;
@@ -18,13 +18,14 @@ Strip::Strip(uint16_t numLeds) {
   FastLED.showColor(CRGB::Black);
 
   FastLED.show();
-  FastLED.setBrightness(10);
+  FastLED.setBrightness(50);
 
   delay(1000);
-  Serial.printf("Strip initialized with length: %d \n", this->length);
+  printf("Strip initialized with length: %d \n", numLeds);
 }
 
 Strip* Strip::getInstance(uint16_t numLeds) {
+
   if (Strip::instance == nullptr) {
     Strip::instance = new Strip(numLeds);
     Strip::animator = new Animator();
@@ -74,15 +75,20 @@ Animator::FX Strip::getFx() {
 };
 
 void Strip::clearToHSV(uint8_t h, uint8_t s, uint8_t v) {
-  FastLED.showColor(CHSV(h, s, v));
+  // FastLED.showColor(CHSV(h, s, v));
 };
 
 void Strip::clearToRGB(uint8_t r, uint8_t g, uint8_t b) {
-  FastLED.showColor(CRGB(r, g, b));
+  // FastLED.showColor(CRGB(r, g, b));
 };
 
+void Strip::setPixelColor(uint16_t pixel, uint8_t h, uint8_t s, uint8_t v) {
+  FastLED.leds()[pixel] = CHSV(h, s, v);
+  FastLED.show();
+}
+
 void Strip::test() {
-  Serial.println("test");
+  printf("test \n");
 
   for (int i = 0; i < this->length; i++) {
     FastLED.leds()[i] = CRGB(50, 0, 0);
@@ -110,10 +116,11 @@ uint16_t Strip::getLength() {
 void Strip::update() {
   static unsigned long lastUpdate = millis();
   //update every 50ms
-  if (millis() - lastUpdate < 50) {
+  if (millis() - lastUpdate < 30) {
     return;
   }
 
+  digitalWrite(2, !digitalRead(2));
   lastUpdate = millis();
 
   switch (this->state) {
@@ -124,7 +131,6 @@ void Strip::update() {
       this->animator->animate(this->frameIndex, (Animator::FX)this->fx);
       break;
     case STATE::PAUSED:
-
       break;
   }
 };

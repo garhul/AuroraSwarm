@@ -1,6 +1,6 @@
 #pragma once
 #include <Arduino.h>
-#include "EspNow/wrapper.h"
+#include "EspNowWrapper.h"
 
 #define BUFFER_SIZE 64
 #define DELIMITER '\n'
@@ -55,7 +55,7 @@ enum Commands {
 };
 
 class Terminal {
-private:
+  private:
   ESPNowWrapper* espNow;
   CommandHandler handlers[CMD_COUNT];
   char buffer[BUFFER_SIZE];
@@ -65,7 +65,7 @@ private:
   void printHelp(String cmdToken);
   void bindHandlers();
 
-public:
+  public:
   Terminal();
   void poll();
   void attachHandler(Commands type, CommandHandler handler);

@@ -7,7 +7,7 @@
 #include <FastLED.h>
 
 #define LED_BUFFER 200 
-#define DATA_PIN 4
+#define DATA_PIN 2
 
 class Strip {
   public:
@@ -43,8 +43,8 @@ class Strip {
   void play();
   void pause();
 
-  void setMaxBrightness(float br);
-  float getMaxBrightness();
+  void setMaxBrightness(uint8_t br);
+  uint8_t getMaxBrightness();
 
   void setAnimationSpeed(uint8_t spd);
   uint8_t getAnimationSpeed();

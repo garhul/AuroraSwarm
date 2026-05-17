@@ -13,7 +13,7 @@ Strip::Strip(uint16_t numLeds) {
   this->length = numLeds;
 
   CRGB* leds = new CRGB[LED_BUFFER];
-  FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, LED_BUFFER);
+  FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, numLeds);
 
   FastLED.showColor(CRGB::Black);
 
@@ -50,11 +50,12 @@ Strip::STATE Strip::getState() {
   return this->state;
 }
 
-void Strip::setMaxBrightness(float br) {
+void Strip::setMaxBrightness(uint8_t br) {
   this->maxBrightness = br;
+  FastLED.setBrightness(br);
 }
 
-float Strip::getMaxBrightness() {
+uint8_t Strip::getMaxBrightness() {
   return this->maxBrightness;
 }
 

@@ -2,6 +2,7 @@
 
 #include "Arduino.h"
 #include <FastLED.h>
+#include "Logger.h"
 
 // Todo, make abstract and allow differnt animators.
 class Animator {
@@ -10,7 +11,7 @@ class Animator {
   // void fx_aurora();
   // void fx_white_aurora();
   void fx_rainbow();
-  // void fx_wavebow();
+  void fx_wave();
   // void fx_opposites();
   // void fx_hue_split();
   // void fx_chaser();

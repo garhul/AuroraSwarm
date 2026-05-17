@@ -1,0 +1,27 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "outDir": "dist/",
+    "rootDir": "./src/js",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "typeRoots": [
+      "./node_modules/@types",
+      "./src/types/"
+    ],
+    "types": [
+      "node",
+      "w3c-web-serial"
+    ],
+    "lib": [
+      "dom",
+      "ESNext"
+    ],
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

@@ -55,6 +55,7 @@ void setup() {
 
   INFO("Starting Aurora Node \n");
   strip = Strip::getInstance(NUM_LEDS);
+  // strip->setMaxBrightness(2);
   pinMode(PAIR_BTN, INPUT_PULLUP);
   espNow = ESPNowWrapper::getInstance();
   espNow->begin();
@@ -62,8 +63,8 @@ void setup() {
 
   strip->test();
   strip->off();
-  strip->setFx(Animator::FX::RAINBOW);
-  strip->pause();
+
+  espNow->requestToPair();
 }
 
 void loop() {

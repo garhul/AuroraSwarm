@@ -1,0 +1,109 @@
+:root{
+  --fg-light:#ff0000;
+  
+}
+
+body {
+  font-family: sans-serif;
+  margin: 0;
+  
+  height: 100vh;
+  background-color:#4b4f5e;
+}
+
+.navbar>.container-fluid {
+  justify-content: flex-end;
+  gap: 1em;
+} 
+
+header {
+  padding: .5rem;
+  background: #333;
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  box-shadow: .5em .5em .5em #00000050;
+}
+
+#TermWidget > .viewPort {
+  background: #111;
+  color: #0f0;
+  padding: .5em;
+  font-family: monospace;
+  margin-bottom: 1em;
+  font-size:.8em;
+  border-radius: var(--bs-border-radius);
+  overflow-y: scroll;
+  height: 60vh;
+}
+
+#controls {
+  height: 40vh;
+  border-radius: var(--bs-border-radius);
+  background: #22222288;
+  margin: 2em auto;
+  color:var(--fg-light);
+}
+
+#TermWidget > div > input {
+  background:#212529;
+  color:#f0ff99;
+  border-color:#0000;
+  
+}
+
+#TermWidget > div> input::placeholder {
+  color:#909765
+}
+
+.btn-xs {
+  --bs-btn-padding-y: 0.4rem;
+  --bs-btn-padding-x: 0.4rem;
+  --bs-btn-font-size: 0.8rem;
+  font-weight:bold;
+  --bs-btn-border-radius: var(--bs-border-radius-sm);
+}
+/*
+.container {
+  display: grid;
+  grid-template-rows: 1fr 300px;
+  gap: 20px;
+  padding: 20px;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+
+
+body > header {
+  text-align: right;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.button-grid button {
+  padding: 15px;
+  cursor: pointer;
+}
+
+.color-section {
+  text-align: center;
+  border-top: 1px solid #ccc;
+} */

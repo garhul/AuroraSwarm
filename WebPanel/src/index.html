@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>AuroraSwarm WebPanel</title>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand navbar-dark bg-dark">
+    <div class="container-fluid p-2">
+      <span id="connectedBadge" class="badge bg-secondary">Disconnected</span>
+      <button type="button" id="connectBtn" class="btn btn-outline-light">Connect</button>
+    </div>
+  </nav>
+
+  <div class="container">
+
+    <!-- Controls widget -->
+    <div class="row" id="controls">
+      <div class="button-grid col-md-6" id="buttonGrid"></div>
+      <div class="color-section  col-md-6"">
+          <label>Send Color:</label>
+          <input type=" color" id="colorPicker">
+      </div>
+    </div>
+
+
+    <div class="row mt-2">
+      <!-- terminal widget -->
+      <div class="col-md-6" id="TermWidget">
+        <div class="row">
+          <div class="btn-toolbar justify-content-between" role="toolbar" aria-label="Toolbar with button groups">
+            <div class="btn-group me-2" role="group" aria-label="First group">
+              <button id="autoScrollToggleBtn" type="button" class="btn btn-warning btn-xs">Autoscroll</button>
+              <button id="clearBtn" type="button" class="btn btn-secondary btn-xs">Clear</button>
+            </div>
+          </div>
+        </div>
+        <div class="viewPort w-100 d-inline-block"></div>
+        <div class="input-group mb-3">
+          <input id="cmdInput" type="text" class="form-control form-control-sm" placeholder="command input"
+            aria-label="Send commands" aria-describedby="input_grp">
+          <div class="input-group-append">
+            <button class="btn btn-sm btn-dark" type="button">send</button>
+          </div>
+          <!-- </div> -->
+        </div>
+      </div>
+
+      <!-- nodes list widget -->
+      <div class="col-md-6" id="NodeList">
+        <div class="btn-group" role="group" aria-label="Third group">
+          <button type="button" class="btn btn-warning btn-xs">Reload</button>
+        </div>
+        <div class="h-100 w-100 d-inline-block">
+          <ul class="list-group">
+            <li class="list-group-item list-group-item-primary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-secondary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-primary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-secondary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-primary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-secondary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-primary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-secondary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-secondary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-secondary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+            <li class="list-group-item list-group-item-secondary">
+              <span class="badge badge-info">&nbsp</span>
+              <span>[FF:33:44:55:66:00] - [nodec3]</span>
+              <span>
+                <button class="btn btn-xs">remove</button>
+                <button class="btn btn-xs">edit</button>
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

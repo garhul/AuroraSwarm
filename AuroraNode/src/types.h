@@ -1,14 +1,4 @@
-#pragma once
-
-#define BTN_A 4
-#define BTN_B 5
-
-#include <Arduino.h>
-#include "EspNow/wrapper.h"
-#include "Terminal/terminal.h"
-#include "EspNowWrapper.h"
-#include "Logger.h"
-
+/** This doesn't need to be here, Broker doesn't know what AuroraNode is */
 enum class AURORA_COMMANDS {
   CMD_PLAY,
   CMD_OFF,
@@ -22,3 +12,8 @@ enum class AURORA_COMMANDS {
   CMD_SET_PX,
   COMMANDS_COUNT
 };
+
+enum class MESSAGE_FORMAT {
+  MSG_HUMAN_READABLE,
+  MSG_BINARY
+}; 

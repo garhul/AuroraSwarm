@@ -13,13 +13,14 @@ Terminal::Terminal() {
 void Terminal::printHelp(String cmdToken) {
   if (cmdToken == NODE_CMD_TOKEN) {
     Serial.println("[ HELP ] NODE:");
-    Serial.println("  - node ls                              Lists all registered nodes");
-    Serial.println("  - node rm -i <NODE_INDEX>              Removes a node by slot index");
-    Serial.println("  - node rm -m <MAC_ADDRESS>             Removes a node by MAC address");
-    Serial.println("  - node add <MAC_ADDRESS> <NAME>        Adds a node (max name: 26 chars)");
-    Serial.println("  - node send -i <NODE_INDEX> <PAYLOAD>  Calls node at index with payload");
-    Serial.println("  - node send -a <PAYLOAD>               Broadcasts to all nodes with payload");
-    Serial.println("  - node update -i <NODE_INDEX>          Sends an OTA Update message to a device");
+    Serial.println("  - node ls                                   Lists all registered nodes");
+    Serial.println("  - node rm -i <NODE_INDEX>                   Removes a node by slot index");
+    Serial.println("  - node rm -m <MAC_ADDRESS>                  Removes a node by MAC address");
+    Serial.println("  - node add <MAC_ADDRESS> <NAME>             Adds a node (max len: 32 chars)");
+    Serial.println("  - node send -i <NODE_INDEX> <PAYLOAD>       Calls node at index with payload");
+    Serial.println("  - node send -l <NODE_INDEX_LIST> <PAYLOAD>  Calls node at index with payload");
+    Serial.println("  - node send -a <PAYLOAD>                    Broadcasts to all nodes with payload");
+    Serial.println("  - node update -i <NODE_INDEX>               Sends an OTA Update message to a node");
     Serial.println();
 
   } else if (cmdToken == ROUTE_CMD_TOKEN) {
@@ -31,7 +32,7 @@ void Terminal::printHelp(String cmdToken) {
 
   } else if (cmdToken == SYSTEM_CMD_TOKEN) {
     Serial.println("[ HELP ] REBOOT:");
-    Serial.println("  - reboot                          Reboots the device");
+    Serial.println("  - reboot                          Reboots the node");
     Serial.println();
 
   } else {
@@ -43,7 +44,6 @@ void Terminal::printHelp(String cmdToken) {
     Serial.println("Type <COMMAND> for more details on usage");
   }
 }
-
 
 inline uint8_t getCmdType(String cmdToken, String actionToken) {
   uint8_t cmdType = 99;
@@ -89,7 +89,6 @@ inline uint8_t getCmdType(String cmdToken, String actionToken) {
 
   return cmdType;
 }
-
 
 void Terminal::parseCommand() {
   char* tokens[BUFFER_SIZE];
@@ -169,12 +168,10 @@ void Terminal::poll() {
   }
 }
 
-
 /** HANDLERS FOR TERMINAL COMMANDS */
-
 void nodesListHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   ESPNowWrapper* espNow = ESPNowWrapper::getInstance();
-  espNow->listDevices();
+  espNow->listNodes();
 }
 
 void nodesRemoveHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
@@ -202,7 +199,7 @@ void nodesRemoveHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
       return;
     }
 
-    espNow->removeDevice(macAddr);
+    espNow->removeNode(macAddr);
     return;
   }
 
@@ -210,7 +207,7 @@ void nodesRemoveHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   if (mode == "-i") {
     uint8_t index = atoi(args[3]);
     Serial.printf("[ INFO ] - Removing node at slot %d \n", index);
-    espNow->removeDevice(index);
+    espNow->removeNode(index);
     return;
   }
 }
@@ -234,12 +231,12 @@ void nodesAddHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
     return;
   }
 
-  Device* d = new Device();
+  Node* d = new Node();
 
   memcpy(d->macAddress, macAddr, 6);
   memcpy(d->name, args[3], 26);
 
-  if (espNow->addDevice(d)) {
+  if (espNow->addNode(d)) {
     Serial.println("[ INFO ] - OK");
   }
 }
@@ -256,18 +253,23 @@ void nodeSendHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   mode.trim();
   mode.toLowerCase();
 
-  String payload;
+  String payload = String((char)MSG_TYPE::MSG_NODE_CMD);
   for (uint8_t i = 4; i < argc; i++) {
     payload += String(args[i]) + " ";
   }
   payload.trim();
 
-  DEBUG("MODE :%s , PAYLOAD,:%s", mode, payload);
+  DEBUG("MODE :%s , PAYLOAD,:%s", mode, String(payload));
 
   if (mode == "-i") {
-    DEBUG("Sending Payload: %s, to device index %d \n", String(payload).c_str(), atoi(args[3]));
-    DEBUG("Index -> %d\n", (uint8_t)atoi(args[3]));
-    espNow->sendToDevice((uint8_t)atoi(args[3]), (const uint8_t*)payload.c_str(), (const uint8_t)payload.length());
+    DEBUG("Sending Payload: %s, to nodes %s \n", String(payload).c_str(), args[3]);
+
+    char* idx = strtok(args[3], ":");
+    while (idx != NULL) {
+      espNow->sendToNode((uint8_t)atoi(idx), (const uint8_t*)payload.c_str(), (const uint8_t)payload.length());
+      idx = strtok(NULL, ":");
+    }
+
   } else if (mode == "-a") {
     espNow->broadcast((const uint8_t*)payload.c_str(), (const uint8_t)payload.length());
   } else {
@@ -279,7 +281,6 @@ void systemRestartHandler(uint8_t argc, char* args[BUFFER_SIZE]) {
   Serial.println("[ INFO ] Restarting system...");
   ESP.restart();
 }
-
 
 void Terminal::bindHandlers() {
   /** System command handlers */

@@ -7,11 +7,11 @@ export interface SerialPortState {
   connected: boolean;
 }
 
-export type SerialPortDataListener = (data: Uint8Array | undefined) => void;
+export type SerialPortDataListener = (line: string) => void;
 export type SerialPortStateChangeListener = (state: SerialPortState) => void;
 
 export class SerialPortWrapper {
-  // #recvBuff: Uint8Array;
+  #recvBuff: string = "";
   // #sendBuff: Uint8Array;
   #port: SerialPort | null = null;
   #listeners: SerialPortDataListener[] = [];
@@ -47,12 +47,6 @@ export class SerialPortWrapper {
         this.#stateChangeListeners.forEach(l => l(state));
 
         // Add init message
-        if (state.connected == true) {
-          setTimeout(() => {
-            this.send(Uint8Array.from("node ls"));
-          }, 250);
-        }
-
       };
 
       if (this.#port) {
@@ -63,7 +57,10 @@ export class SerialPortWrapper {
       }
 
       await this.#port.open({ baudRate: 115200 });
-      console.log(await this.#port.getSignals());
+      // console.log(await this.#port.getSignals());
+      setTimeout(() => {
+        this.send("node ls \n");
+      }, 1000);
 
       this.#port?.addEventListener('disconnect', () => console.error('port disconnected'));
       this.read();
@@ -94,15 +91,27 @@ export class SerialPortWrapper {
     this.#listeners.push(listener);
   }
 
-
+  // Todo:: move to a worker thread
   async read() {
     const decoder = new TextDecoder();
+
     while (this.#port?.readable) {
       this.#reader = this.#port.readable.getReader();
       try {
-        while (true) { // Todo:: move to a worker thread
+        while (true) {
           const { value, done } = await this.#reader.read();
-          this.#listeners.forEach(l => l(value));
+          const decoder = new TextDecoder();
+
+          this.#recvBuff += (decoder.decode(value));
+
+          let completeLine = this.#recvBuff.slice(0, this.#recvBuff.indexOf("\n") + 1);
+
+
+          while (completeLine) {
+            this.#recvBuff = this.#recvBuff.split(completeLine).pop() ?? "";
+            this.#listeners.forEach(l => l(completeLine.trim()));
+            completeLine = this.#recvBuff.slice(0, this.#recvBuff.indexOf("\n") + 1);
+          }
 
           if (done) break;
         }
@@ -115,84 +124,25 @@ export class SerialPortWrapper {
     }
   }
 
-  async send(payload: Uint8Array) {
+  async send(payload: string) {
+    console.debug("Sending to serial:", payload);
     if (!this.#port) return;
-
-    if (this.#port && this.#port.writable) {
-      const writer = this.#port.writable.getWriter();
-      const encoder = new TextEncoder();
-      await writer.write(encoder.encode(payload.toString()));
-      writer.releaseLock();
-    }
-  }
-}
-
-
-export interface SerialTerminalWidgetSettings {
-  autoScroll: boolean;
-  colorLabels: boolean;
-  color?: '#ff0000';
-}
-
-
-export class SerialTermWidget {
-  #rootEl: HTMLElement;
-  #port: SerialPortWrapper;
-  #inputEl: HTMLInputElement | null;
-  #viewPort: HTMLTextAreaElement | null;
-  #settings: SerialTerminalWidgetSettings = {
-    autoScroll: true,
-    colorLabels: true,
-  }
-
-  constructor(rootEl: HTMLElement, port: SerialPortWrapper) {
-    this.#rootEl = rootEl;
-    this.#port = port;
-    this.#inputEl = this.#rootEl.querySelector('.input');
-    this.#viewPort = this.#rootEl.querySelector('.viewPort');
-
-    port.onMessage((data) => {
-      if (!data) return;
-      const decoder = new TextDecoder();
-
-      this.#renderNewData(decoder.decode(data));
-    })
-
-    this.#bindControls();
-  }
-
-
-  #bindControls() {
-    const autoScrollBtn = this.#rootEl.querySelector("#autoScrollToggleBtn");
-    const clearBtn = this.#rootEl.querySelector("#clearBtn");
-
-    clearBtn?.addEventListener('click', () => {
-      if (this.#viewPort)
-        this.#viewPort.innerHTML = "";
-    });
-
-    autoScrollBtn?.addEventListener('click', () => {
-      this.#settings.autoScroll = !this.#settings.autoScroll;
-      if (!this.#settings.autoScroll) {
-        autoScrollBtn.classList.remove('btn-warning');
-        autoScrollBtn.classList.add('btn-secondary');
-      } else {
-        autoScrollBtn.classList.add('btn-warning');
-        autoScrollBtn.classList.remove('btn-secondary');
+    let writer = null;
+    try {
+      if (this.#port && this.#port.writable) {
+        writer = this.#port.writable.getWriter();
+        const encoder = new TextEncoder();
+        await writer.write(encoder.encode(payload));
+        writer.releaseLock();
       }
-    });
-  }
-
-  #renderNewData(data: string) {
-    if (this.#viewPort === null) return;
-
-    this.#viewPort.innerText += data;
-    if (this.#settings.autoScroll) {
-      this.#viewPort.scrollTop = this.#viewPort.scrollHeight;
+    } catch (ex) {
+      console.error(ex);
+    } finally {
+      writer?.releaseLock();
     }
   }
-
 }
+
 
 
 

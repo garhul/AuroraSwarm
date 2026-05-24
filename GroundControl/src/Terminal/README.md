@@ -13,13 +13,13 @@ Commands (enum `Commands`)
 - `CMD_SYSTEM_CONFIG_GET` — Get a configuration value for the current node.
 - `CMD_SYSTEM_CFG_DUMP` — Dump the current configuration.
 - `CMD_SYSTEM_CFG_CLEAR` — Clear the current configuration.
-- `CMD_SYSTEM_CFG_IMPORT` — Import configuration from input (e.g. rules/devices).
-- `CMD_NODE_ADD` — Add a node/device.
+- `CMD_SYSTEM_CFG_IMPORT` — Import configuration from input (e.g. rules/nodes).
+- `CMD_NODE_ADD` — Add a node/node.
 - `CMD_NODE_LS` — List registered nodes.
-- `CMD_NODE_MV` — Rename a node/device.
-- `CMD_NODE_RM` — Remove a node/device.
+- `CMD_NODE_MV` — Rename a node/node.
+- `CMD_NODE_RM` — Remove a node/node.
 - `CMD_NODE_CALL` — Send a message to a node.
-- `CMD_NODE_SYS_UPDATE` — Request OTA update for a device.
+- `CMD_NODE_SYS_UPDATE` — Request OTA update for a node.
 - `CMD_ROUTE_ADD` — Add a routing rule (not implemented).
 - `CMD_ROUTE_LS` — List routing rules (not implemented).
 - `CMD_ROUTE_RM` — Remove a routing rule (not implemented).

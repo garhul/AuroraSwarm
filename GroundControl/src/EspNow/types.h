@@ -34,7 +34,7 @@
 // typedef struct {
 //   uint8_t macAddress[6];
 //   uint8_t name[26];
-// } Device;
+// } Node;
 
 
 // typedef struct {

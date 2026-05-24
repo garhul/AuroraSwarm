@@ -4,11 +4,11 @@ Serial commands are case insensitive
 
 
 
-device ls
-device rm -a, -m mac_address
-device name -m name
-device update -m -v?
-device 
+node ls
+node rm -a, -m mac_address
+node name -m name
+node update -m -v?
+node 
 
 up -i index | -m mac address
 mv -i index | -m mac address new name
@@ -27,17 +27,17 @@ Max peers = 19 (non encrypted + broadcast addr)
 Broker actions:
 - Pair request handling
 - Allow / Disallow auto-pairing
-- Add a device
-- Remove a device
-- Send message to device
-- Send message to all devices
+- Add a node
+- Remove a node
+- Send message to node
+- Send message to all nodes
 - Provide serial terminal
-  - list devices
-  - remove device
-  - clear devices
-  - request device update
-  - label/name device
-  - send message to device
+  - list nodes
+  - remove node
+  - clear nodes
+  - request node update
+  - label/name node
+  - send message to node
   - register message relay (origin mac - destination mac(s))
   - ?export config
   - ?load config

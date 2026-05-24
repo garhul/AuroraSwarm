@@ -29,17 +29,18 @@ enum Commands {
   CMD_SYSTEM_UPDATE,
   CMD_SYSTEM_CONFIG_SET,
   CMD_SYSTEM_CONFIG_GET,
+  CMD_SYSTEM_INFO,
   CMD_SYSTEM_CFG_DUMP,
   CMD_SYSTEM_CFG_CLEAR,
-  CMD_SYSTEM_CFG_IMPORT,          // set config from input (rules, devices? what else)
+  CMD_SYSTEM_CFG_IMPORT,          // set config from input (rules, nodes? what else)
 
   /* Node specific commands, applicable to registered nodes */
   CMD_NODE_ADD,         // Add NODE
   CMD_NODE_LS,          // list NODEs
-  CMD_NODE_MV,          // rename device
+  CMD_NODE_MV,          // rename node
   CMD_NODE_RM,          // clear NODEs ,remove NODE
   CMD_NODE_SEND,        // send message to NODE
-  CMD_NODE_SYS_UPDATE,   // request device OTA update
+  CMD_NODE_SYS_UPDATE,   // request node OTA update
 
   /* Routing specific commands, not implemented yet */
   CMD_ROUTE_ADD,        // Add a routing rule

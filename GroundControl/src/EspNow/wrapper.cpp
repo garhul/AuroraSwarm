@@ -11,11 +11,11 @@
 // };
 
 // /** Iterates through all devices in the list and prints out the macAddress value */
-// void listAllDevices(Device* d[MAX_NODES]) {
+// void listAllDevices(Node* d[MAX_NODES]) {
 //   Serial.println("[ INFO ] - Listing all devices:");
 //   for (int i = 0; i < MAX_NODES; i++) {
 //     if (d[i] != nullptr) {
-//       Serial.printf("  Device %d: [%02x:%02x:%02x:%02x:%02x:%02x]\n",
+//       Serial.printf("  Node %d: [%02x:%02x:%02x:%02x:%02x:%02x]\n",
 //         i,
 //         d[i]->macAddress[0], d[i]->macAddress[1], d[i]->macAddress[2],
 //         d[i]->macAddress[3], d[i]->macAddress[4], d[i]->macAddress[5]);
@@ -50,12 +50,12 @@
 //   memcpy(&msg, message, sizeof(Message<PairRequestPayload>));
 //   Serial.printf("  Payload: name[%s] \n", msg.payload.deviceName);
 
-//   Device d;
-//   memset(&d, 0, sizeof(Device));
+//   Node d;
+//   memset(&d, 0, sizeof(Node));
 //   memcpy(&d.macAddress, macAddr, 6);
 //   memcpy(&d.name, msg.payload.deviceName, sizeof(d.name));
 
-//   if (!instance->addDevice(&d)) {
+//   if (!instance->addNode(&d)) {
 //     return;
 //   };
 
@@ -64,7 +64,7 @@
 //   memset(&reqOkMsg.payload, 0, sizeof(reqOkMsg.payload));
 //   strncpy((char*)&reqOkMsg.payload.data, "OK", sizeof(reqOkMsg.payload.data));
 
-//   instance->sendToDevice(d, (uint8_t*)&reqOkMsg, sizeof(Message<PairOkPayload>));
+//   instance->sendToNode(d, (uint8_t*)&reqOkMsg, sizeof(Message<PairOkPayload>));
 //   return;
 // }
 
@@ -83,10 +83,10 @@
 
 //   Serial.println("[ INFO ] - Adding broker");
 
-//   Device* broker = new Device();
+//   Node* broker = new Node();
 //   memcpy(broker->macAddress, macAddr, 6);
 //   memcpy(broker->name, "Broker", 7);
-//   instance->addDevice(broker, true);
+//   instance->addNode(broker, true);
 // }
 
 // void ESPNowWrapper::addPeer(const uint8_t* macAddr) {
@@ -151,7 +151,7 @@
 //     registerHandler(MSG_PAIR_OK, &ESPNowWrapper::pairOkHandler);
 //   }
 
-//   loadDevices();
+//   loadNodes();
 
 // }
 
@@ -164,7 +164,7 @@
 //     return;
 //   }
 
-//   if (msg[0] != MSG_PAIR_REQUEST && msg[0] != MSG_PAIR_OK && instance->getDevice(macAddr) == nullptr) {
+//   if (msg[0] != MSG_PAIR_REQUEST && msg[0] != MSG_PAIR_OK && instance->getNode(macAddr) == nullptr) {
 //     Serial.printf("[ WARN ] - Ignoring message from unknown peer [%02x:%02x:%02x:%02x:%02x:%02x]\n",
 //       macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
 //     return;
@@ -202,13 +202,13 @@
 //   instance->handlers[msg[0]](macAddr, msg, len);
 // }
 
-// bool ESPNowWrapper::addDevice(const Device* device, bool asBroker) {
+// bool ESPNowWrapper::addNode(const Node* device, bool asBroker) {
 //   uint8_t idx = 0;
 //   Serial.printf("[ INFO ] - Adding device: %s\n", device->name);
 
 //   if (!asBroker) {
-//     if (getDevice(device->macAddress) != nullptr) {
-//       Serial.println("[ INFO ] - Device already registered");
+//     if (getNode(device->macAddress) != nullptr) {
+//       Serial.println("[ INFO ] - Node already registered");
 //       return true;
 //     }
 
@@ -221,7 +221,7 @@
 //     }
 
 //     if (idx == 0) {
-//       Serial.println("[ ERROR ] - Unable to add Device, list is full");
+//       Serial.println("[ ERROR ] - Unable to add Node, list is full");
 //       return false;
 //     }
 //   } else {
@@ -248,29 +248,29 @@
 //     delete instance->devices[idx];
 //   }
 
-//   instance->devices[idx] = (Device*)device;
+//   instance->devices[idx] = (Node*)device;
 
 //   instance->prefs.begin("devices", false);
 //   String key = String("slot_" + String(idx)).c_str();
 //   Serial.printf("[ DEBUG ] - Storing under key %s \n", key.c_str());
-//   instance->prefs.putBytes(key.c_str(), (uint8_t*)device, sizeof(Device));
+//   instance->prefs.putBytes(key.c_str(), (uint8_t*)device, sizeof(Node));
 //   instance->prefs.end();
 
 //   instance->addPeer(device->macAddress);
 //   return true;
 // }
 
-// bool ESPNowWrapper::removeDevice(const uint8_t macAddres[6]) {
+// bool ESPNowWrapper::removeNode(const uint8_t macAddres[6]) {
 //   for (int i = 0; i < MAX_NODES; i++) {
 //     if (devices[i] != nullptr && memcmp(instance->devices[i]->macAddress, macAddres, 6) == 0) {
-//       return instance->removeDevice(i);
+//       return instance->removeNode(i);
 //     }
 //   }
-//   Serial.println("[ ERROR ] - Device not found");
+//   Serial.println("[ ERROR ] - Node not found");
 //   return false;
 // }
 
-// bool ESPNowWrapper::removeDevice(uint8_t idx) {
+// bool ESPNowWrapper::removeNode(uint8_t idx) {
 
 //   if (idx >= MAX_NODES) {
 //     Serial.printf("[ ERROR ] - Index[%d] out of bounds trying to remove device \n", idx);
@@ -294,7 +294,7 @@
 //     instance->prefs.end();
 //     delete devices[idx];
 //     devices[idx] = nullptr;
-//     Serial.printf("[ INFO ] - Device removed and preferences updated.\n");
+//     Serial.printf("[ INFO ] - Node removed and preferences updated.\n");
 //     return true;
 //   }
 
@@ -304,12 +304,12 @@
 //   return false;
 // }
 
-// void ESPNowWrapper::storeDevices() {
+// void ESPNowWrapper::storeNodes() {
 //   instance->prefs.begin("devices", false);
 
 //   for (int i = 0; i < MAX_NODES; i++) {
 //     if (devices[i] != nullptr) {
-//       instance->prefs.putBytes(String("slot_" + String(i)).c_str(), (uint8_t*)devices[i], sizeof(Device));
+//       instance->prefs.putBytes(String("slot_" + String(i)).c_str(), (uint8_t*)devices[i], sizeof(Node));
 //     }
 //   }
 
@@ -317,7 +317,7 @@
 //   Serial.println("[ INFO ] - Devices stored in flash.");
 // }
 
-// void ESPNowWrapper::loadDevices() {
+// void ESPNowWrapper::loadNodes() {
 //   instance->prefs.begin("devices", false);
 
 //   for (int i = 0; i < MAX_NODES; i++) {
@@ -331,14 +331,14 @@
 
 //     Serial.print(" FOUND ");
 
-//     uint8_t buffer[sizeof(Device)];
+//     uint8_t buffer[sizeof(Node)];
 
-//     // Device* device;
-//     instance->prefs.getBytes(id.c_str(), &buffer, sizeof(Device));
+//     // Node* device;
+//     instance->prefs.getBytes(id.c_str(), &buffer, sizeof(Node));
 
-//     instance->devices[i] = new Device();
+//     instance->devices[i] = new Node();
 //     memcpy(&instance->devices[i]->macAddress, &buffer, 6);
-//     memcpy(&instance->devices[i]->name, &buffer[6], sizeof(Device) - 6);
+//     memcpy(&instance->devices[i]->name, &buffer[6], sizeof(Node) - 6);
 
 //     Serial.printf("  MAC [%02x:%02x:%02x:%02x:%02x:%02x] ",
 //         devices[i]->macAddress[0], devices[i]->macAddress[1], devices[i]->macAddress[2],
@@ -363,7 +363,7 @@
 //   }
 // }
 
-// Device* ESPNowWrapper::getDevice(const uint8_t macAddr[6]) {
+// Node* ESPNowWrapper::getNode(const uint8_t macAddr[6]) {
 //   for (int i = 0; i < MAX_NODES; i++) {
 //     if (devices[i] != nullptr && memcmp(instance->devices[i]->macAddress, macAddr, 6) == 0) {
 //       return instance->devices[i];
@@ -372,20 +372,20 @@
 //   return nullptr;
 // };
 
-// Device** ESPNowWrapper::getDevices() {
+// Node** ESPNowWrapper::getNode() {
 //   return devices;
 // }
 
-// bool ESPNowWrapper::sendToDevice(uint8_t index, const uint8_t* message, const uint8_t len) {
+// bool ESPNowWrapper::sendToNode(uint8_t index, const uint8_t* message, const uint8_t len) {
 //   if (index >= MAX_NODES) {
 //     Serial.printf("[ ERROR ] - Slot [%d] is out of bounds \n", index);
 //     return false;
 //   }
 
-//   return sendToDevice(*devices[index], message, len);
+//   return sendToNode(*devices[index], message, len);
 // }
 
-// bool ESPNowWrapper::sendToDevice(const Device& device, const uint8_t* message, const uint8_t len) {
+// bool ESPNowWrapper::sendToNode(const Node& device, const uint8_t* message, const uint8_t len) {
 //   Serial.printf("[ INFO ] - Sending message to device: %s\n", device.name);
 
 //   int result = esp_now_send((uint8_t*)device.macAddress, (uint8_t*)message, len);
@@ -403,7 +403,7 @@
 //   Serial.println("[ INFO ] - Sending message to all devices");
 //   for (int i = 0; i < MAX_NODES; i++) {
 //     if (devices[i] != nullptr) {
-//       sendToDevice(*devices[i], message, len);
+//       sendToNode(*devices[i], message, len);
 //     }
 //   }
 // }

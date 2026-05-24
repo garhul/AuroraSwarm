@@ -23,9 +23,9 @@ void setup() {
 }
 
 inline void handleBtnA() {
-  INFO("Sending CMD PLAY to all devices");
+  INFO("Sending CMD PLAY to all nodes");
   uint8_t msg[2] = {
-   (uint8_t)MSG_TYPE::MSG_AURORA_CMD,
+   (uint8_t)MSG_TYPE::MSG_NODE_CMD,
    (uint8_t)AURORA_COMMANDS::CMD_PLAY
   };
 
@@ -33,27 +33,26 @@ inline void handleBtnA() {
 }
 
 inline void handleBtnB() {
-  INFO("Sending CMD OFF to all devices");
+  INFO("Sending CMD OFF to all nodes");
   uint8_t msg[2] = {
-   (uint8_t)MSG_TYPE::MSG_AURORA_CMD,
+   (uint8_t)MSG_TYPE::MSG_NODE_CMD,
    (uint8_t)AURORA_COMMANDS::CMD_OFF
   };
 
   espNow->sendToAll(msg, 2);
 }
 
-
 inline void nextPx() {
   static uint8_t h = 0;
   static uint8_t idx = 0;
   static uint8_t l = 0;
 
-  INFO("Sending CMD SET PX to all devices");
+  INFO("Sending CMD SET PX to all nodes");
   h++;
 
 
   uint8_t msg[6] = {
-  (uint8_t)MSG_TYPE::MSG_AURORA_CMD,
+  (uint8_t)MSG_TYPE::MSG_NODE_CMD,
   (uint8_t)AURORA_COMMANDS::CMD_SET_PX,
   (uint8_t)idx,
    h,

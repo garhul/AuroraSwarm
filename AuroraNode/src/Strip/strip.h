@@ -26,7 +26,7 @@ class Strip {
   Animator::FX fx = (Animator::FX)0;
   uint32_t frameIndex = 0;
 
-  float maxBrightness = .5;
+  float maxBrightness = 1;
   void animate();
   void drawFrame();
 

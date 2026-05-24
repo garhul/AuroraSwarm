@@ -18,7 +18,7 @@ Strip::Strip(uint16_t numLeds) {
   FastLED.showColor(CRGB::Black);
 
   FastLED.show();
-  FastLED.setBrightness(50);
+  FastLED.setBrightness(255);
 
   delay(1000);
   printf("Strip initialized with length: %d \n", numLeds);
@@ -76,7 +76,7 @@ Animator::FX Strip::getFx() {
 };
 
 void Strip::clearToHSV(uint8_t h, uint8_t s, uint8_t v) {
-  // FastLED.showColor(CHSV(h, s, v));
+  FastLED.showColor(CHSV(h, s, v));
 };
 
 void Strip::clearToRGB(uint8_t r, uint8_t g, uint8_t b) {

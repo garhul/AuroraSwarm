@@ -15,7 +15,7 @@ export class SerialPortWrapper {
   // #sendBuff: Uint8Array;
   #port: SerialPort | null = null;
   #listeners: SerialPortDataListener[] = [];
-  #stateChangeListeners: SerialPortStateChangeListener[] = [];
+  #stateChangeListeners: { 'connect': SerialPortStateChangeListener[]; 'disconnect': SerialPortStateChangeListener[] } = { 'connect': [], 'disconnect': [] };
   #reader: ReadableStreamDefaultReader<Uint8Array<ArrayBufferLike>> | null = null;
 
   isConnected(): Boolean {
@@ -39,47 +39,52 @@ export class SerialPortWrapper {
 
   async connect(): Promise<boolean> {
     try {
-
       this.#port = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x303a }] });
 
-      const stChangeHandler = () => {
-        const state = { connected: this.#port?.connected || false };
-        this.#stateChangeListeners.forEach(l => l(state));
-
-        // Add init message
-
-      };
-
       if (this.#port) {
-        this.#port.addEventListener('connect', stChangeHandler);
-        this.#port.addEventListener('disconnect', () => {
-          console.error("Port connection lost");
-          stChangeHandler();
+        this.#port.addEventListener('connect', () => {
+          console.log('Connecteddd')
+          this.#stateChangeListeners.connect.forEach(l => l({ connected: true }));
         });
+
+        this.#port.addEventListener('disconnect', async () => {
+          console.error("Port connection lost");
+          this.#stateChangeListeners.disconnect.forEach(l => l({ connected: false }));
+
+          try {
+            await this.#port?.close();
+          } catch (ex) {
+            if ((ex as DOMException).name === "InvalidStateError") {
+              console.warn("Port closing already");
+            }
+          }
+        });
+
+        await this.#port.open({ baudRate: 115200 });
+        setTimeout(async () => {
+          this.#stateChangeListeners.connect.forEach(l => l({ connected: true }))
+          this.send("node ls \n");
+        }, 1000);
+
+        this.read();
+
       } else {
         console.error("No port found");
       }
 
-      await this.#port.open({ baudRate: 115200 });
-      // console.log(await this.#port.getSignals());
-      setTimeout(() => {
-        this.send("node ls \n");
-      }, 1000);
 
-      this.#port?.addEventListener('disconnect', () => console.error('port disconnected'));
-      this.read();
+      return true;
     } catch (err) {
-      return false;
       console.error("Error connecting to serial port", err);
+      return false;
     }
-
-    return true;
   }
 
   async disconnect(): Promise<boolean> {
     try {
       this.#reader?.releaseLock();
       await this.#port?.close();
+      this.#stateChangeListeners.disconnect.forEach(l => l({ connected: false }))
       return true;
     } catch (ex) {
       console.error(ex);
@@ -87,8 +92,12 @@ export class SerialPortWrapper {
     }
   }
 
-  onStateChange(listener: SerialPortStateChangeListener) {
-    this.#stateChangeListeners.push(listener);
+  onConnect(listener: SerialPortStateChangeListener) {
+    this.#stateChangeListeners.connect.push(listener);
+  }
+
+  onDisconnect(listener: SerialPortStateChangeListener) {
+    this.#stateChangeListeners.disconnect.push(listener);
   }
 
   onMessage(listener: SerialPortDataListener) {

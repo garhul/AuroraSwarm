@@ -26,6 +26,7 @@ const init = () => {
   nodeList.onSelectionChange((nodes) => controls.updateNodes(nodes));
   controls.bindToSerial(serial);
 
+
 };
 
 init();

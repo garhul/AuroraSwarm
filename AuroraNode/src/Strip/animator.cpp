@@ -43,29 +43,28 @@ void Animator::fx_aurora() {
   static uint8_t start_hue = 120;
   static uint8_t center_hue = 150;
   static int8_t dir = 1;
-  static uint8_t br = 0;
+  static uint16_t br = 0;
+  static uint8_t increment = 4;
   uint16_t midpoint = this->numLeds / 2;
 
 
   float hue_increment = (center_hue - start_hue) / ((float)midpoint / 2);
   float hue = start_hue;
 
-  for (uint16_t idx = 0; idx < this->numLeds; idx++) {
-    if (idx > midpoint) {
-      br += 4;
-      hue -= hue_increment;
-    } else {
-      br -= 4;
-      hue += hue_increment;
+  if (this->frameIndex % this->transitionSpeed == 0) {
+    for (uint16_t idx = 0; idx < this->numLeds; idx++) {
+      if (idx > midpoint) {
+        br += 8;
+        hue -= hue_increment;
+      } else {
+        br -= 8;
+        hue += hue_increment;
+      }
+      FastLED.leds()[idx] = CHSV(hue, 255, sin16(br)); //sin8(idx / 2));
     }
-    FastLED.leds()[idx] = CHSV(hue, 255, sin8(br)); //sin8(idx / 2));
   }
-
   FastLED.show();
 
-  if (this->frameIndex % this->transitionSpeed == 0) {
-    br++;
-  }
 
   this->frameIndex++;
 }

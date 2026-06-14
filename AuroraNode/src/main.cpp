@@ -29,6 +29,10 @@ inline void processCmd(AURORA_COMMANDS cmd, uint8_t* args) {
       strip->clearToHSV(args[0], args[1], args[2]);
       break;
 
+    case AURORA_COMMANDS::CMD_PAUSE_RESUME:
+      strip->pause(true);
+      break;
+
     case AURORA_COMMANDS::CMD_SET_BR:
       strip->setMaxBrightness(args[0]);
       break;
@@ -95,7 +99,7 @@ void auroraHndlr(uint8_t* macAddr, uint8_t* message, uint8_t len) {
       processCmd(AURORA_COMMANDS::CMD_FX_SPEED, &payloadBuff[2]);
     } else if (payload.startsWith("br")) {
       processCmd(AURORA_COMMANDS::CMD_SET_BR, &payloadBuff[2]);
-    } else if (payload.startsWith("hsl")) {
+    } else if (payload.startsWith("hsv")) {
       processCmd(AURORA_COMMANDS::CMD_SET_HSV, &payloadBuff[2]);
     } else if (payload.startsWith("px")) {
       processCmd(AURORA_COMMANDS::CMD_SET_PX, &payloadBuff[2]);
@@ -103,6 +107,8 @@ void auroraHndlr(uint8_t* macAddr, uint8_t* message, uint8_t len) {
       processCmd(AURORA_COMMANDS::CMD_PLAY, nullptr);
     } else if (payload.startsWith("pause")) {
       processCmd(AURORA_COMMANDS::CMD_PAUSE, nullptr);
+    } else if (payload.startsWith("respause")) {
+      processCmd(AURORA_COMMANDS::CMD_PAUSE_RESUME, nullptr);
     } else if (payload.startsWith("off")) {
       processCmd(AURORA_COMMANDS::CMD_OFF, nullptr);
     } else {

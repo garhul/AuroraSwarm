@@ -11,9 +11,9 @@
     <div class="container-fluid p-2">
       <h3 class="align-self-start">Aurora Swarm v1.0</h3>
       <div class="align-self-end">
-        <span id="connectedBadge" class="badge bg-secondary">Disconnected</span>
-        <button type="button" id="connectBtn" class="btn btn-outline-light">Connect</button>
+        <button type="button" id="connectBtn" class="btn btn-light">Connect</button>
       </div>
+    </div>
     </div>
   </nav>
 
@@ -21,7 +21,7 @@
 
     <!-- Controls widget -->
     <div class="row mt-2 justify-content-between">
-      <div class="col-md-8 position-relative" id="Controls">
+      <div class="col-md-8 position-relative disabled" id="Controls">
         <div class="row">
           <h5>Controls</h5>
         </div>
@@ -29,7 +29,6 @@
         <div class="row">
           <h6>Color swatch</h6>
           <div class="col-12" id="ColorSwatches">
-            color whesel here
           </div>
         </div>
 
@@ -37,14 +36,14 @@
           <div class="col">
             <fieldset>
               <label for="brRange" class="form-label">Brightness</label>
-              <input id="brRange" class="form-range" type="range" min="0" max="255" />
+              <input id="brRange" class="form-range" type="range" min="0" max="255" value="255" />
             </fieldset>
           </div>
           <div class="col">
 
             <fieldset>
               <label for="satRange" class="form-label">Saturation</label>
-              <input id="satRange" class="form-range" type="range" min="0" max="255" />
+              <input id="satRange" class="form-range" type="range" min="0" max="255" value="255" />
             </fieldset>
           </div>
         </div>
@@ -70,10 +69,19 @@
             CHASER, // a single bright pixel that chases around the strip
             POLICE, // two pixels of complementary hues chase around the strip
             ALBICELESTE, // celeste y blanca-->
-            <fieldset class="mt-2">
-              <label for=" spdRange" class="form-label">Animation Speed</label>
-              <input id="spdRange" class="form-range" type="range" min="0" max="255" />
-            </fieldset>
+            <div class="col">
+              <fieldset class="mt-2">
+                <label for=" spdRange" class="form-label">Animation Speed</label>
+                <input id="spdRange" class="form-range" type="range" min="0" max="255" value="254" />
+              </fieldset>
+            </div>
+            <div class="col">
+
+              <fieldset class="mt-2">
+                <label for=" animBrRange" class="form-label">Animation Brightness</label>
+                <input id="animBrRange" class="form-range" type="range" min="0" max="255" value="255" />
+              </fieldset>
+            </div>
             <div class="row mt-2">
               <div class="col-md-11">
                 <button data-payload='{"cmds":["H:FX:1","H:play"]}' data-type="json"
@@ -109,7 +117,7 @@
       </div>
 
       <!-- nodes list widget -->
-      <div class="col-md-3" id="NodeList">
+      <div class="col-md-3 disabled" id="NodeList">
         <!-- <div class="h-100 w-100 d-inline-block"> -->
         <h5>Nodes list</h5>
         <div class="row">
@@ -123,14 +131,14 @@
           <div class="btn-group" role="group">
             <button id="clearSelectionBtn" type="button" class="btn btn-secondary btn-xs">Clear selection</button>
             <button id="autoUpdateToggleBtn" type="button" class="btn btn-secondary btn-xs"><span
-                class="btnIndicator indicator-on"></span>Auto Update</button>
+                class="btnIndicator"></span>Auto Update</button>
           </div>
         </div>
       </div>
     </div>
 
     <!-- terminal widget -->
-    <div class="row mt-4" id="TermWidget">
+    <div class="row mt-4 disabled" id="TermWidget">
       <div class="col-12">
         <div class="row justify-content-between mt-2 mb-2">
           <div class="col-4">

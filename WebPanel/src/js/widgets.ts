@@ -37,26 +37,32 @@ class NavBarWidget {
   bindToSerial(serial: SerialPortWrapper) {
     this.#serial = serial;
 
-    this.#serial.onStateChange((st: SerialPortState) => {
-      this.#update(st.connected);
+    this.#serial.onDisconnect((st: SerialPortState) => {
+      this.#update(true);
     });
   }
 
   #update(connected: boolean) {
-    const badge = document.querySelector("#connectedBadge");
-    if (!badge) return;
+
 
     if (!connected) {
       if (this.#connBtn) this.#connBtn.innerHTML = "Disconnect";
-      badge.innerHTML = "Connected";
-      badge.classList.add("bg-success");
-      badge.classList.remove("bg-secondary");
+
+      this.#connBtn?.classList.add('btn-danger');
+      this.#connBtn?.classList.remove('btn-light');
+      // badge.innerHTML = "Connected";
+      // badge.classList.add("bg-success");
+      // badge.classList.remove("bg-secondary");
     } else {
       if (this.#connBtn) this.#connBtn.innerHTML = "Connect";
+      this.#connBtn?.classList.add('btn-light');
+      this.#connBtn?.classList.remove('btn-danger');
+
+
       // Todo - disable buttons and other inputs that go to the serial port
-      badge.innerHTML = "Disconnected";
-      badge.classList.add("bg-secondary");
-      badge.classList.remove("bg-success");
+      // badge.innerHTML = "Disconnected";
+      // badge.classList.add("bg-secondary");
+      // badge.classList.remove("bg-success");
     }
   }
 }
@@ -103,6 +109,15 @@ export class SerialTermWidget {
 
   bindToSerial(serial: SerialPortWrapper) {
     this.#serial = serial;
+
+    this.#serial.onDisconnect((data) => {
+      this.#rootEl.classList.add('disabled');
+    });
+
+    this.#serial.onConnect(data => {
+      this.#rootEl.classList.remove('disabled');
+    })
+
     this.#serial.onMessage((data) => {
       if (data.length == 0) return;
       this.#renderNewData(data);
@@ -172,7 +187,7 @@ export type NodeChangeListener = (nodes: Map<string, NodeData>) => void
 
 class NodeList {
   #rootEl;
-  #autoUpdate = true;
+  #autoUpdate = false;
   #nodes: Map<string, NodeData> = new Map<string, NodeData>;
   #serial: SerialPortWrapper | null = null;
   #changeListeners: NodeChangeListener[] = [];
@@ -190,10 +205,26 @@ class NodeList {
         indicator?.classList.remove('indicator-on');
       }
     });
+
+    this.#rootEl.querySelector('#clearSelectionBtn')?.addEventListener('click', (e) => {
+      this.#nodes.forEach(n => n.selected = false);
+      this.#update();
+    });
+  }
+
+  enable() {
+    this.#rootEl.classList.remove('disabled');
+  }
+
+  disable() {
+    this.#rootEl.classList.add('disabled');
   }
 
   bindToSerial(serial: SerialPortWrapper) {
     this.#serial = serial;
+
+    this.#serial.onConnect((_) => this.enable());
+    this.#serial.onDisconnect((_) => this.disable());
 
     this.#serial.onMessage((data) => {
       if (!data.startsWith("[ INFO ] - [ NODE ]"))
@@ -276,31 +307,35 @@ class Controls {
   #serial: SerialPortWrapper | null = null;
   #rootEl: HTMLElement;
   #brRange: HTMLInputElement;
+  #animBrRange: HTMLInputElement;
+  #satRange: HTMLInputElement;
   #spdRange: HTMLInputElement;
+  #dirty: boolean;
   #nodes: Map<string, NodeData> = new Map<string, NodeData>;
   #updateInterval = 50;
+  #swatchUpdateInterval = 100;
   #updateTimer: NodeJS.Timeout | null = null;
+  #swatchUpdateTimer: NodeJS.Timeout | null = null;
   #sendBuffer: string[] = [];
 
   constructor(rootEl: HTMLElement) {
     this.#rootEl = rootEl;
-
+    this.#dirty = false;
     this.#brRange = rootEl.querySelector('#brRange') as HTMLInputElement;
+    this.#satRange = rootEl.querySelector('#satRange') as HTMLInputElement;
     this.#spdRange = rootEl.querySelector('#spdRange') as HTMLInputElement;
+    this.#animBrRange = rootEl.querySelector('#animBrRange') as HTMLInputElement;
 
     this.#bindControls();
     this.#renderSwatch();
 
-    this.#updateTimer = setInterval(() => {
-      if (this.#sendBuffer.length > 0) {
-        if (!this.#serial) return;
 
-        // Todo, parse and convert the buffer to a string, then
-        // const payload = 
 
-        this.#sendToSelectedNodes();
+    this.#swatchUpdateTimer = setInterval(() => {
+      if (this.#dirty) {
+        this.#renderSwatch();
       }
-    }, this.#updateInterval);
+    }, this.#swatchUpdateInterval);
 
   }
 
@@ -336,17 +371,41 @@ class Controls {
     this.#sendBuffer = [];
   }
 
+  #hsvToHsl(hue: number, sat: number, val: number): { h: number, s: number, l: number } {
+
+    // normalize values
+    const snorm = sat / 255;
+    const vnorm = val / 255;
+
+
+    const l = vnorm - vnorm * snorm / 2;
+    const s = Math.min(l, 1 - l) ? (vnorm - l) / Math.min(l, 1 - l) : 0;
+
+    return {
+      h: hue,
+      s: s * 100,
+      l: l * 100,
+    }
+  }
+
   #renderSwatch() {
     const colors = 96;
     const rows = 4;
     const swatches = [];
+
+    const sat = parseInt(this.#satRange.value);
+    const br = parseInt(this.#brRange.value);
+
+    const hsl = this.#hsvToHsl(0, sat, br);
+
     for (let i = 1; i <= colors; i++) {
       const sw = document.createElement('span');
       sw.classList.add('swatch');
       const hue = i * (360 / colors);
 
-      sw.setAttribute('data-payload', `H:HSL:${Math.ceil(i * (255 / colors))}:255:255`);
-      sw.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
+      sw.setAttribute('data-payload', `H:HSV:${Math.ceil(i * (255 / colors))}:${sat}:${br}`);
+
+      sw.style.backgroundColor = `hsl(${hue}, ${hsl.s}%, ${hsl.l}%)`;
 
       sw.addEventListener('click', (el) => {
         this.#sendBuffer = [`${sw.getAttribute('data-payload')}`];
@@ -362,17 +421,37 @@ class Controls {
     const swatchContainer = this.#rootEl.querySelector('#ColorSwatches');
     swatchContainer?.replaceChildren(...swatches);
 
+    this.#dirty = false;
   }
 
   bindToSerial(serial: SerialPortWrapper) {
     this.#serial = serial;
+
+
+    this.#serial.onConnect((_) => {
+      this.#rootEl.classList.remove('disabled')
+      // this.#dirty = true;
+      // this.#sendBuffer = [`H:br:${this.#animBrRange.value}`, `H:spd:${this.#spdRange.value}`];
+    });
+
+    this.#serial.onDisconnect((_) => this.#rootEl.classList.add('disabled'));
+
+    this.#updateTimer = setInterval(() => {
+      if (this.#sendBuffer.length > 0) {
+        if (!this.#serial) return;
+        this.#sendToSelectedNodes();
+      }
+    }, this.#updateInterval);
+
   }
 
   #bindControls() {
     this.#rootEl.querySelectorAll('button[data-payload]').forEach(btn => {
       btn.addEventListener('click', () => {
         if (btn.getAttribute('data-type') === "json") {
-          this.#sendBuffer = JSON.parse(btn.getAttribute('data-payload') ?? "").cmds
+          this.#sendBuffer = [...JSON.parse(btn.getAttribute('data-payload') ?? "").cmds, `H:br:${this.#animBrRange.value}`, `H:spd:${this.#spdRange.value}`];
+          // this.#dirty = true;
+          // this.#sendBuffer = [`H:br:${this.#animBrRange.value}`, `H:spd:${this.#spdRange.value}`];
         } else {
           this.#sendBuffer = [btn.getAttribute('data-payload') || ""];
 
@@ -382,7 +461,17 @@ class Controls {
 
     this.#brRange.addEventListener('input', (e => {
       const val = (e.currentTarget as HTMLInputElement).value;
+      this.#dirty = true;
+    }));
+
+    this.#animBrRange.addEventListener('input', (e => {
+      const val = (e.currentTarget as HTMLInputElement).value;
       this.#sendBuffer = [`H:br:${val}`];
+    }));
+
+    this.#satRange.addEventListener('input', (e => {
+      const val = (e.currentTarget as HTMLInputElement).value;
+      this.#dirty = true;
     }));
 
     this.#spdRange.addEventListener('input', (e => {

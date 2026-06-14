@@ -25,6 +25,15 @@ body {
   filter: blur(.5em);
 }
 
+#TermWidget.disabled, #NodeList.disabled, #Controls.disabled {
+  filter:blur(.1em);
+  opacity: .5;
+  pointer-events:none;
+}
+
+fieldset > label {
+  font-size:.9em;
+}
 
 header {
   padding: .5rem;

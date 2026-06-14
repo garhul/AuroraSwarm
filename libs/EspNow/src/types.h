@@ -23,6 +23,21 @@ enum class PAYLOAD_TYPE {
   PAYLOAD_NODE_ST
 };
 
+enum class AURORA_COMMANDS {
+  CMD_PLAY,
+  CMD_OFF,
+  CMD_PAUSE,
+  CMD_PAUSE_RESUME,
+  CMD_FX,
+  CMD_FX_NEXT,
+  CMD_FX_PREV,
+  CMD_FX_SPEED,
+  CMD_SET_BR,
+  CMD_SET_HSV,
+  CMD_SET_PX,
+  COMMANDS_COUNT
+};
+
 template <typename T>
 struct Message {
   uint8_t msgType;

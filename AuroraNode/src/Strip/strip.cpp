@@ -36,16 +36,23 @@ Strip* Strip::getInstance(uint16_t numLeds) {
   return Strip::instance;
 }
 
+
 void Strip::off() {
   this->state = STATE::OFF;
 }
+
+
 
 void Strip::play() {
   this->state = STATE::PLAYING;
 }
 
-void Strip::pause() {
-  this->state = STATE::PAUSED;
+void Strip::pause(bool toggle) {
+  if (toggle) {
+    this->state = (this->state == STATE::PAUSED) ? STATE::PLAYING : STATE::PAUSED;
+  } else {
+    this->state = STATE::PAUSED;
+  }
 }
 
 Strip::STATE Strip::getState() {

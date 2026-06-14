@@ -39,10 +39,9 @@ class Strip {
 
   static Strip* getInstance(uint16_t numLeds);
   STATE getState();
-  uint8_t setState(STATE state);
   void off();
   void play();
-  void pause();
+  void pause(bool = true);
 
   void setMaxBrightness(uint8_t br);
   uint8_t getMaxBrightness();

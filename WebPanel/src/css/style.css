@@ -16,8 +16,7 @@ body {
 }
 
 .navbar>.container-fluid {
-  justify-content: flex-end;
-  gap: 1em;
+  /* gap: 1em; */
 } 
 
 .disconnected-blur {

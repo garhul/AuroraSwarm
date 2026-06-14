@@ -47,11 +47,15 @@ export class SerialPortWrapper {
         this.#stateChangeListeners.forEach(l => l(state));
 
         // Add init message
+
       };
 
       if (this.#port) {
         this.#port.addEventListener('connect', stChangeHandler);
-        this.#port.addEventListener('disconnect', stChangeHandler);
+        this.#port.addEventListener('disconnect', () => {
+          console.error("Port connection lost");
+          stChangeHandler();
+        });
       } else {
         console.error("No port found");
       }

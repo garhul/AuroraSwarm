@@ -9,8 +9,11 @@
 <body>
   <nav class="navbar navbar-expand navbar-dark bg-dark">
     <div class="container-fluid p-2">
-      <span id="connectedBadge" class="badge bg-secondary">Disconnected</span>
-      <button type="button" id="connectBtn" class="btn btn-outline-light">Connect</button>
+      <h3 class="align-self-start">Aurora Swarm v1.0</h3>
+      <div class="align-self-end">
+        <span id="connectedBadge" class="badge bg-secondary">Disconnected</span>
+        <button type="button" id="connectBtn" class="btn btn-outline-light">Connect</button>
+      </div>
     </div>
   </nav>
 
@@ -31,26 +34,33 @@
         </div>
 
         <div class="row mt-4">
-          <fieldset>
-            <label for="brRange" class="form-label">Brightness</label>
-            <input id="brRange" class="form-range" type="range" min="0" max="255" />
-          </fieldset>
+          <div class="col">
+            <fieldset>
+              <label for="brRange" class="form-label">Brightness</label>
+              <input id="brRange" class="form-range" type="range" min="0" max="255" />
+            </fieldset>
+          </div>
+          <div class="col">
 
+            <fieldset>
+              <label for="satRange" class="form-label">Saturation</label>
+              <input id="satRange" class="form-range" type="range" min="0" max="255" />
+            </fieldset>
+          </div>
         </div>
 
         <div class="row mt-4 mb-4">
           <div class="row mb-2 justify-content-between">
-            <div class="col-6">
+            <div class="col-md-10">
               <h6>Animations</h6>
             </div>
-            <div class="col-6 text-end">
-              <button data-payload="H:play" class="btn btn-sm btn-outline-success">Animation Play</button>
-              <button data-payload="H:pause" class="btn btn-sm btn-outline-secondary">Animation Pause</button>
-              <button data-payload="H:off" class="btn btn-sm btn-outline-danger">Off</button>
+            <div class="col-md-2 align-self-end">
+              <!-- <button data-payload="H:play" class="btn btn-sm btn-outline-success">Animation Play</button> -->
+              <button data-payload="H:pause" class="btn btn-sm btn-secondary">Play/Pause</button>
             </div>
           </div>
 
-          <div class="col">
+          <div class="row">
             <!-- 
             RAINBOW, // changes hue on all leds 
             WAVEBOW, //  changes hue from center to edges and bounces back, uses two colors as inputs
@@ -64,16 +74,28 @@
               <label for=" spdRange" class="form-label">Animation Speed</label>
               <input id="spdRange" class="form-range" type="range" min="0" max="255" />
             </fieldset>
-            <div class="mt-2">
-              <button data-payload='{"cmds":["H:FX:1","H:play"]}' data-type="json"
-                class="btn btn-sm btn-warning">Rainbow</button>
-              <button data-payload="H:FX:2" class="btn btn-sm btn-warning">Wave Bow</button>
-              <button data-payload="H:FX:3" class="btn btn-sm btn-warning">Aurora</button>
-              <button data-payload="H:FX:4" class="btn btn-sm btn-warning">Oposites</button>
-              <button data-payload="H:FX:5" class="btn btn-sm btn-warning">Lightning</button>
-              <button data-payload="H:FX:6" class="btn btn-sm btn-warning">Chaser</button>
-              <button data-payload="H:FX:7" class="btn btn-sm btn-warning">Police</button>
-              <button data-payload="H:FX:8" class="btn btn-sm btn-warning">Albiceleste</button>
+            <div class="row mt-2">
+              <div class="col-md-11">
+                <button data-payload='{"cmds":["H:FX:1","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">Rainbow</button>
+                <button data-payload='{"cmds":["H:FX:2","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">WaveBow</button>
+                <button data-payload='{"cmds":["H:FX:3","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">Aurora</button>
+                <button data-payload='{"cmds":["H:FX:4","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">Oposites</button>
+                <button data-payload='{"cmds":["H:FX:5","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">Lightning</button>
+                <button data-payload='{"cmds":["H:FX:6","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">Chaser</button>
+                <button data-payload='{"cmds":["H:FX:7","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">Police</button>
+                <button data-payload='{"cmds":["H:FX:8","H:play"]}' data-type="json"
+                  class="btn btn-sm btn-warning">Albiceleste</button>
+              </div>
+              <div class="col-md-1 align-self-end">
+                <button data-payload="H:off" class="btn btn-sm btn-danger">Off</button>
+              </div>
             </div>
           </div>
         </div>
@@ -97,8 +119,9 @@
             </li>
           </ul>
         </div>
-        <div class="row justify-content-end">
-          <div class="col-auto align-self-end p-2">
+        <div class="row justify-content-between p-2">
+          <div class="btn-group" role="group">
+            <button id="clearSelectionBtn" type="button" class="btn btn-secondary btn-xs">Clear selection</button>
             <button id="autoUpdateToggleBtn" type="button" class="btn btn-secondary btn-xs"><span
                 class="btnIndicator indicator-on"></span>Auto Update</button>
           </div>

@@ -15,17 +15,17 @@ Strip* strip = nullptr;
 
 
 inline void processCmd(AURORA_COMMANDS cmd, uint8_t* args) {
-
-
   switch (cmd) {
+    case AURORA_COMMANDS::CMD_FX:
+      strip->setFx((Animator::FX)args[0]);
+      break;
+
     case AURORA_COMMANDS::CMD_SET_PX:
-      strip->pause();
       strip->setPixelColor(args[0], args[1], args[2], args[3]);
       break;
 
     case AURORA_COMMANDS::CMD_SET_HSV:
       DEBUG("Setting HSV: [%d, %d, %d] \n", args[0], args[1], args[2]);
-      strip->pause();
       strip->clearToHSV(args[0], args[1], args[2]);
       break;
 
@@ -35,6 +35,10 @@ inline void processCmd(AURORA_COMMANDS cmd, uint8_t* args) {
 
     case AURORA_COMMANDS::CMD_FX_SPEED:
       strip->setAnimationSpeed(args[0]);
+      break;
+
+    case AURORA_COMMANDS::CMD_PAUSE:
+      strip->pause();
       break;
 
     case AURORA_COMMANDS::CMD_PLAY:
@@ -127,23 +131,35 @@ void setup() {
 
   strip->test();
   strip->off();
-
-  espNow->requestToPair();
+  strip->setMaxBrightness(50);
 }
+
+inline void reportStatus() {
+  // TODO:: implement a status report back to the broker 
+  /**
+   * example of messages
+   * s:pause:br:30:spd:10:fx:3
+   * s:play:br:30:spd:10:fx:3
+   * s:off:br:30:spd:10:fx:3
+   * s:color:br:30:spd:10:hsv:120:255:50
+   */
+}
+
 
 void loop() {
   static unsigned long backOff_A = millis();
-  strip->update();
 
   if (digitalRead(PAIR_BTN) == LOW && backOff_A < millis()) {
-    INFO("Requesting to pair \n");
-    if (strip->getState() == Strip::STATE::OFF) {
-      strip->play();
-    } else {
-      strip->off();
-    }
-
     espNow->requestToPair();
     backOff_A = millis() + 2000;
+  }
+
+  if (espNow->isPaired()) {
+    strip->update();
+  } else {
+    strip->setPixelColor(0, 0, 255, 50);
+    delay(500);
+    strip->setPixelColor(0, 0, 0, 0);
+    delay(500);
   }
 };

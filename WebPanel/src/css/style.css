@@ -180,3 +180,13 @@ span.swatch:hover {
   scale:1.2;
   box-shadow: 0em 0em 1.5em #000;
 }
+
+span.swatch:active {
+  scale:.9;
+  box-shadow: 0em 0em 1.5em #000;
+}
+
+.btn:active {
+  box-shadow: 0em 0em 1.5em #000;
+  scale:.95;
+}

@@ -13,7 +13,8 @@ Strip::Strip(uint16_t numLeds) {
   this->length = numLeds;
 
   CRGB* leds = new CRGB[LED_BUFFER];
-  FastLED.addLeds<WS2812, DATA_PIN, GRB>(leds, numLeds);
+  FastLED.addLeds<WS2811, DATA_PIN, GRB>(leds, numLeds);
+  FastLED.setMaxRefreshRate(0.02);
 
   FastLED.showColor(CRGB::Black);
 
@@ -28,7 +29,8 @@ Strip* Strip::getInstance(uint16_t numLeds) {
 
   if (Strip::instance == nullptr) {
     Strip::instance = new Strip(numLeds);
-    Strip::animator = new Animator();
+    Strip::animator = new Animator(numLeds);
+    instance->setAnimationSpeed(2);
   }
 
   return Strip::instance;
@@ -61,6 +63,7 @@ uint8_t Strip::getMaxBrightness() {
 
 void Strip::setAnimationSpeed(uint8_t spd) {
   this->animationSpeed = spd;
+  this->animator->setTransitionSpeed(spd);
 }
 
 uint8_t Strip::getAnimationSpeed() {
@@ -76,38 +79,44 @@ Animator::FX Strip::getFx() {
 };
 
 void Strip::clearToHSV(uint8_t h, uint8_t s, uint8_t v) {
-  FastLED.showColor(CHSV(h, s, v));
+  instance->state = STATE::FIXED_COLOR;
+  for (uint16_t idx = 0; idx < instance->length; idx++)
+    FastLED.leds()[idx] = CHSV(h, s, v);
 };
 
 void Strip::clearToRGB(uint8_t r, uint8_t g, uint8_t b) {
-  // FastLED.showColor(CRGB(r, g, b));
+  instance->state = STATE::FIXED_COLOR;
+  for (uint16_t idx = 0; idx < instance->length; idx++)
+    FastLED.leds()[idx] = CRGB(r, g, b);
 };
 
 void Strip::setPixelColor(uint16_t pixel, uint8_t h, uint8_t s, uint8_t v) {
+  instance->state = STATE::FIXED_COLOR;
   FastLED.leds()[pixel] = CHSV(h, s, v);
   FastLED.show();
 }
 
 void Strip::test() {
-  printf("test \n");
+  DEBUG("Running strip test \n");
 
   for (int i = 0; i < this->length; i++) {
     FastLED.leds()[i] = CRGB(50, 0, 0);
     FastLED.show();
-    FastLED.delay(25);
+    FastLED.delay(5);
 
     FastLED.leds()[i] = CRGB(0, 50, 0);
     FastLED.show();
-    FastLED.delay(25);
+    FastLED.delay(5);
 
     FastLED.leds()[i] = CRGB(0, 0, 50);
     FastLED.show();
-    FastLED.delay(25);
+    FastLED.delay(5);
 
     FastLED.leds()[i] = CRGB::Black;
     FastLED.show();
-    FastLED.delay(50);
+    FastLED.delay(5);
   }
+
 };
 
 uint16_t Strip::getLength() {
@@ -116,22 +125,26 @@ uint16_t Strip::getLength() {
 
 void Strip::update() {
   static unsigned long lastUpdate = millis();
-  //update every 50ms
-  if (millis() - lastUpdate < 30) {
+  //update at ~48 fps -> 0.0208 s per update
+  if (millis() - lastUpdate < 20) {
     return;
   }
 
-  digitalWrite(2, !digitalRead(2));
   lastUpdate = millis();
 
   switch (this->state) {
     case STATE::OFF:
+      FastLED.clear();
       FastLED.showColor(CRGB::Black);
       break;
     case STATE::PLAYING:
       this->animator->animate(this->frameIndex, (Animator::FX)this->fx);
       break;
     case STATE::PAUSED:
+      FastLED.show();
+      break;
+    case STATE::FIXED_COLOR:
+      FastLED.show();
       break;
   }
 };

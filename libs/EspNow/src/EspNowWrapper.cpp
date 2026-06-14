@@ -104,6 +104,7 @@ void ESPNowWrapper::pairOkHandler(uint8_t* macAddr, uint8_t* msg, uint8_t len) {
   memcpy(broker->macAddress, macAddr, 6);
   memcpy(broker->name, "Broker", 7);
   instance->addNode(broker, true);
+  instance->paired = true;
 }
 
 void ESPNowWrapper::addPeer(const uint8_t macAddr[6]) {
@@ -127,6 +128,10 @@ void ESPNowWrapper::addPeer(const uint8_t macAddr[6]) {
 
 }
 
+bool ESPNowWrapper::isPaired() {
+  return instance->paired;
+}
+
 void ESPNowWrapper::begin() {
   INFO("broker: %d \n", instance->isBroker);
   if (instance == nullptr) {
@@ -141,7 +146,7 @@ void ESPNowWrapper::begin() {
   instance->prefs.end();
 
   INFO(" Boot count: %d\n", boot);
-
+  instance->paired = false;
   autoPair = false;
   WiFi.mode(WIFI_STA);
 
@@ -276,20 +281,22 @@ bool ESPNowWrapper::addNode(const Node* node, bool asBroker) {
   if (!asBroker) {
     if (getNode(node->macAddress) != nullptr) {
       INFO("Node already registered \n");
-      return true;
-    }
+      idx = getNodeIndex(node->macAddress);
+      // return true;
+    } else {
 
     // Add the node to the list, node position 0 is reserved for broker
-    for (int i = 1; i < MAX_NODES; i++) {
-      if (instance->nodes[i] == nullptr) {
-        idx = i;
-        break;
+      for (int i = 1; i < MAX_NODES; i++) {
+        if (instance->nodes[i] == nullptr) {
+          idx = i;
+          break;
+        }
       }
-    }
 
-    if (idx == 0) {
-      ERROR("Unable to add Node, list is full \n");
-      return false;
+      if (idx == 0) {
+        ERROR("Unable to add Node, list is full \n");
+        return false;
+      }
     }
   } else {
     INFO(" Adding new Broker [%02x:%02x:%02x:%02x:%02x:%02x]\n",
@@ -429,6 +436,9 @@ void ESPNowWrapper::loadNodes() {
     PRINTF("  NAME [%s]\n", nodes[i]->name);
 
     instance->addPeer(nodes[i]->macAddress);
+    if (i == 0) {
+      instance->paired = true;
+    }
   }
 
   instance->prefs.end();
@@ -441,6 +451,15 @@ Node* ESPNowWrapper::getNode(const uint8_t macAddr[6]) {
     }
   }
   return nullptr;
+};
+
+int8_t ESPNowWrapper::getNodeIndex(const uint8_t macAddr[6]) {
+  for (int i = 0; i < MAX_NODES; i++) {
+    if (nodes[i] != nullptr && memcmp(instance->nodes[i]->macAddress, macAddr, 6) == 0) {
+      return i;
+    }
+  }
+  return -1;
 };
 
 Node** ESPNowWrapper::getNode() {
@@ -524,10 +543,10 @@ void ESPNowWrapper::requestToPair() {
     return;
   }
 
-  String nodeName = String(__BASE_NAME__) + String(WiFi.macAddress());
+  String nodeName = String(__BASE_NAME__); // + String(WiFi.macAddress());
   strncpy((char*)&m.payload, nodeName.c_str(), sizeof(m.payload) - 1);
 #elif defined(ESP8266)
-  String nodeName = String(__BASE_NAME__) + String(WiFi.macAddress());
+  String nodeName = String(__BASE_NAME__); // + String(WiFi.macAddress());
   strncpy((char*)&m.payload, nodeName.c_str(), sizeof(m.payload) - 1);
 #endif
 

@@ -14,7 +14,8 @@ class Strip {
   enum class STATE {
     OFF,
     PLAYING,
-    PAUSED
+    PAUSED,
+    FIXED_COLOR
   };
 
   private:
@@ -26,7 +27,7 @@ class Strip {
   Animator::FX fx = (Animator::FX)0;
   uint32_t frameIndex = 0;
 
-  float maxBrightness = 1;
+  uint8_t maxBrightness = 1;
   void animate();
   void drawFrame();
 

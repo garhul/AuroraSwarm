@@ -3,6 +3,7 @@
 
 #define MAX_PAYLOAD_SIZE 128
 #define NODE_NAME_LEN 32
+#define STATE_PAYLOAD_SIZE 64
 #define MAC_ADDR_LEN 6
 
 enum class MSG_TYPE {
@@ -12,6 +13,14 @@ enum class MSG_TYPE {
   MSG_NODE_CMD,       // command from broker to node
   MSG_NODE_ST,        // request state update from node, broker -> node
   MSG_TYPE_COUNT
+};
+
+enum class PAYLOAD_TYPE {
+  PAYLOAD_PAIR_REQUEST,
+  PAYLOAD_PAIR_OK,
+  PAYLOAD_STATE_UPDATE,
+  PAYLOAD_NODE_CMD,
+  PAYLOAD_NODE_ST
 };
 
 template <typename T>
@@ -37,8 +46,19 @@ typedef struct {
   uint8_t name[NODE_NAME_LEN];
 } Node;
 
-
 typedef struct {
   uint8_t inBoundAddr[MAC_ADDR_LEN];
   uint8_t outBoundAddr[MAC_ADDR_LEN];
 } RoutingRule;
+
+typedef struct {
+  uint8_t msgType;
+  uint8_t payloadType;
+  uint8_t payload[STATE_PAYLOAD_SIZE];
+} StateMessage;
+
+typedef struct {
+  uint8_t type;
+  uint8_t name[32];
+  uint8_t ledState[32];
+} AuroraNodeStatePayload;

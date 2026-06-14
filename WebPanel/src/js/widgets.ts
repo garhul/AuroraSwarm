@@ -205,7 +205,7 @@ class NodeList {
       if (groups !== null) {
         const [_str, slot, mac, name] = groups;
         if (!this.#nodes.has(mac)) {
-          this.#nodes.set(mac, { idx: parseInt(slot), id: mac, name, selected: false });
+          this.#nodes.set(mac, { idx: parseInt(slot), id: mac, name, selected: true });
         }
       }
 
@@ -280,7 +280,7 @@ class Controls {
   #nodes: Map<string, NodeData> = new Map<string, NodeData>;
   #updateInterval = 50;
   #updateTimer: NodeJS.Timeout | null = null;
-  #sendBuffer: string = "";
+  #sendBuffer: string[] = [];
 
   constructor(rootEl: HTMLElement) {
     this.#rootEl = rootEl;
@@ -292,7 +292,7 @@ class Controls {
     this.#renderSwatch();
 
     this.#updateTimer = setInterval(() => {
-      if (this.#sendBuffer !== "") {
+      if (this.#sendBuffer.length > 0) {
         if (!this.#serial) return;
 
         // Todo, parse and convert the buffer to a string, then
@@ -323,28 +323,17 @@ class Controls {
 
   async #sendToSelectedNodes() {
     const selectedCount = this.#nodes.entries().toArray().filter(n => n[1].selected).length;
-    if (selectedCount == 0) return;
-    if (!this.#serial) return;
+    if (selectedCount == 0 || !this.#serial) {
+      this.#sendBuffer = [];
+      return;
+    }
 
-    //parse and convert the send buffer to an array of bytes, then send to the selected nodes
-    const payload = `${this.#sendBuffer}`;
-    this.#sendBuffer = "";
+    for (const payload of this.#sendBuffer) {
 
-    // if (selectedCount == this.#nodes.size) {
-    //send to all
-    // this.#serial!.send(`node send -a ${payload}\n`);
-
-    // } else {
-
-
-    const nodeList = this.#nodes.entries().toArray().filter(n => n[1].selected).map(n => n[1].idx).join(':');
-
-
-    // for (const node of this.#nodes.entries().toArray().filter(n => n[1].selected)) {
-
-    await this.#serial!.send(`node send -i ${nodeList} ${payload}\n`);
-    // };
-    // }
+      const nodeList = this.#nodes.entries().toArray().filter(n => n[1].selected).map(n => n[1].idx).join(':');
+      await this.#serial!.send(`node send -i ${nodeList} ${payload}\n`);
+    }
+    this.#sendBuffer = [];
   }
 
   #renderSwatch() {
@@ -356,11 +345,11 @@ class Controls {
       sw.classList.add('swatch');
       const hue = i * (360 / colors);
 
-      sw.setAttribute('data-payload', `H:HSL:${Math.ceil(i * (255 / colors))}:255:128`);
+      sw.setAttribute('data-payload', `H:HSL:${Math.ceil(i * (255 / colors))}:255:255`);
       sw.style.backgroundColor = `hsl(${hue}, 100%, 50%)`;
 
       sw.addEventListener('click', (el) => {
-        this.#sendBuffer = `${sw.getAttribute('data-payload')}`;
+        this.#sendBuffer = [`${sw.getAttribute('data-payload')}`];
       });
 
       swatches.push(sw);
@@ -382,18 +371,23 @@ class Controls {
   #bindControls() {
     this.#rootEl.querySelectorAll('button[data-payload]').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.#sendBuffer = btn.getAttribute('data-payload') || "";
+        if (btn.getAttribute('data-type') === "json") {
+          this.#sendBuffer = JSON.parse(btn.getAttribute('data-payload') ?? "").cmds
+        } else {
+          this.#sendBuffer = [btn.getAttribute('data-payload') || ""];
+
+        }
       });
     });
 
     this.#brRange.addEventListener('input', (e => {
       const val = (e.currentTarget as HTMLInputElement).value;
-      this.#sendBuffer = `br:${val}`;
+      this.#sendBuffer = [`H:br:${val}`];
     }));
 
     this.#spdRange.addEventListener('input', (e => {
       const val = (e.currentTarget as HTMLInputElement).value;
-      this.#sendBuffer = `spd:${val}`;
+      this.#sendBuffer = [`H:spd:${val}`];
     }));
   }
 }

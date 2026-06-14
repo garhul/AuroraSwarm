@@ -125,7 +125,7 @@ export class SerialPortWrapper {
   }
 
   async send(payload: string) {
-    console.debug("Sending to serial:", payload);
+    // console.debug("Sending to serial:", payload);
     if (!this.#port) return;
     let writer = null;
     try {

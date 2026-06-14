@@ -36,6 +36,7 @@ class ESPNowWrapper {
   private:
   static ESPNowWrapper* instance;
   Node* nodes[MAX_NODES] = {};
+  bool paired;
   MessageHandler handlers[(uint8_t)MSG_TYPE::MSG_TYPE_COUNT];
   bool autoPair;
   bool isBroker;
@@ -85,5 +86,8 @@ class ESPNowWrapper {
   bool sendToNode(uint8_t index, const uint8_t* msg, uint8_t len);
 
   Node* getNode(const uint8_t macAddr[6]);
+  int8_t getNodeIndex(const uint8_t macAddr[6]);
   Node** getNode();
+
+  bool isPaired();
 };

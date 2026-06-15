@@ -2,6 +2,10 @@
 ESPNowWrapper* ESPNowWrapper::instance = nullptr;
 
 inline void debugPrint(uint8_t* data, size_t len) {
+#ifndef __DEBUG__
+  return;
+#endif
+
   DEBUG("Data (%d bytes): ", len);
 
   for (size_t i = 0; i < len; i++) {
@@ -25,9 +29,11 @@ inline void debugPrint(uint8_t* data, size_t len) {
 
 #ifdef ESP32
 void OnDataSent(const uint8_t* mac_addr, esp_now_send_status_t status) {
+
   DEBUG("SENT DATA: ");
   debugPrint((uint8_t*)mac_addr, 6);
   DEBUG("STATUS %s \n", String(status).c_str());
+
 }
 #endif
 

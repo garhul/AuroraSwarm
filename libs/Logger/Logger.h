@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Arduino.h>
-#define __DEBUG__
+// #define __DEBUG__
 
 #if defined(ESP8266)
 
@@ -20,7 +20,7 @@
 #if defined(__DEBUG__)
 #define DEBUG(...) printf("[ DEBUG ] - ");printf(__VA_ARGS__);
 #else
-#define DEBUG(...)
+#define DEBUG(...) ";"
 #endif
 
 #define INFO(...)  printf("[ INFO ] - ");printf(__VA_ARGS__);

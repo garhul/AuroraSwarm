@@ -126,12 +126,12 @@ void Terminal::parseCommand() {
 }
 
 void Terminal::handleCommand(uint8_t cmdType, uint8_t argc, char* argv[BUFFER_SIZE]) {
-  Serial.printf("[ DEBUG ] Handling command %d, arguments: %d \n", cmdType, argc);
+  DEBUG("Handling command %d, arguments: %d \n", cmdType, argc);
 
   if (this->handlers[cmdType] != nullptr) {
     this->handlers[cmdType](argc, argv);
   } else {
-    Serial.printf("[ ERROR ] - No handler registered for cmdType %d \n", cmdType);
+    ERROR("No handler registered for cmdType %d \n", cmdType);
   }
 
 }

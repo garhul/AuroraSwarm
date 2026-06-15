@@ -256,7 +256,16 @@ class NodeList {
   #update() {
     const items = [];
     // add new elements if needed
-    for (const k of this.#nodes.keys()) {
+    // const keys = this.#nodes.entries().toArray().sort();
+    const keys = this.#nodes.entries().toArray()
+      .sort((a, b) => {
+        if (a[1].name < b[1].name) return -1;
+        if (a[1].name > b[1].name) return 1;
+        return 0;
+      }).map(v => v[0]);
+
+
+    for (const k of keys) {
       const li = document.createElement('li');
       if (this.#nodes.get(k)?.selected)
         li.classList.add('selected')

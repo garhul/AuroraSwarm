@@ -1,8 +1,6 @@
 #include "animator.h"
 
 
-
-
 Animator::Animator(uint16_t numLeds) {
   this->numLeds = numLeds;
 }
@@ -13,6 +11,10 @@ Animator::Animator(uint16_t numLeds) {
  */
 void Animator::fx_rainbow() {
   static uint8_t hue = 0;
+  if (this->frameIndex == 0) {
+    hue = 0;
+  }
+
   this->frameIndex++;
 
   if (this->frameIndex % this->transitionSpeed == 0) {
@@ -25,6 +27,7 @@ void Animator::fx_rainbow() {
 
 void Animator::fx_chaser() {
   static uint8_t spd = 0;
+  if (this->frameIndex == 0) spd = 0;
 
   for (uint16_t idx = 0; idx < this->numLeds; idx++) {
     FastLED.leds()[idx] = CHSV(sin8(idx + spd), 255, sin8(spd + (idx * 16))); //sin8(idx / 2));
@@ -54,10 +57,10 @@ void Animator::fx_aurora() {
   if (this->frameIndex % this->transitionSpeed == 0) {
     for (uint16_t idx = 0; idx < this->numLeds; idx++) {
       if (idx > midpoint) {
-        br += 8;
+        br += 4;
         hue -= hue_increment;
       } else {
-        br -= 8;
+        br -= 4;
         hue += hue_increment;
       }
       FastLED.leds()[idx] = CHSV(hue, 255, sin16(br)); //sin8(idx / 2));
@@ -124,7 +127,7 @@ void Animator::fx_lightning() {
   if (refreshRandomValues) {
     refreshRandomValues = false;
     this->frameIndex = 0;
-    firstStepDuration = random(24, 192);
+    firstStepDuration = random(24, 120);
     secondStepDuration = 0;
     seedPosition = random((this->numLeds / 4), (this->numLeds / 4) * 3);
     //seed grow rate goes from 2 to 5 seconds for the whole strip
@@ -133,7 +136,7 @@ void Animator::fx_lightning() {
     // if I want 1 second  for the whole strip that's ~6.25 leds per frame (300 / 48 = 6.25)
     // if I want 5 seconds for the whole strip that's 1.2 leds per frame (300 / 240  = 1.25 )
     // bottom -> stripLen / 
-    seedGrowRate = random(ceil(this->numLeds / 48), ceil(this->numLeds / 240));
+    seedGrowRate = random(ceil(this->numLeds / 24), ceil(this->numLeds / 200));
     fullLightningDuration = random(4, 12);
     noLightningDuration = random(6, 24);
     cycles = random(1, 4);
@@ -208,6 +211,12 @@ inline void Animator::fx_waveBow() {
   static uint8_t center_hue = CT_H;
   static int8_t dir = 1;
   uint16_t midpoint = this->numLeds / 2;
+
+  if (this->frameIndex == 0) {
+    start_hue = ST_H;
+    center_hue = CT_H;
+    dir = 1;
+  }
 
 
   float hue_increment = (center_hue - start_hue) / ((float)midpoint / 2);
